@@ -52,18 +52,23 @@ def only_industry(settings):
 
 
 def make_lead(lead_id="L001", size=100, last=date(2024, 1, 15), flags=(), company="Acme", industry="Logistics"):
-    return Lead(lead_id, "Ann", company, size, industry, "Referral", last, flags=list(flags))
+    return Lead(
+        lead_id=lead_id, name="Ann", company=company, company_size=size, industry=industry,
+        source="Referral", last_interaction_date=last, flags=list(flags),
+    )
 
 
 def fit(lead_id="L001", tier="best", score=10, confidence="high", failed=False):
-    return IndustryResult(lead_id, tier, score, confidence, "Because.", llm_failed=failed)
+    return IndustryResult(
+        lead_id=lead_id, tier=tier, industry_fit=score, confidence=confidence, reason="Because.", llm_failed=failed
+    )
 
 
 def rules(size=10, source=10, recency=10):
     return {
-        "size": RuleResult("size", size, "size detail"),
-        "source": RuleResult("source", source, "source detail"),
-        "recency": RuleResult("recency", recency, "recency detail"),
+        "size": RuleResult(rule="size", score=size, detail="size detail"),
+        "source": RuleResult(rule="source", score=source, detail="source detail"),
+        "recency": RuleResult(rule="recency", score=recency, detail="recency detail"),
     }
 
 
@@ -321,7 +326,7 @@ def test_explanation_shows_priority_and_flags(settings):
 
 
 def test_explanation_copes_with_missing_fields(settings):
-    lead = Lead("L001", None, None, None, None, None, None)
+    lead = Lead(lead_id="L001")
     result = decide(lead, fit(tier="unknown", score=5, confidence="low"), settings)
     first = result.explanation.splitlines()[0]
     assert first == "Lead: L001 (size not provided, industry not provided, source not provided)"

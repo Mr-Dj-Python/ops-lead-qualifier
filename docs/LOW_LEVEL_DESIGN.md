@@ -197,6 +197,8 @@ Rules for building the payload: `company_size` is an integer or `null`; a missin
 ```
 
 ### 3.5 Response schema (validation contract)
+The contract below is implemented by the `IndustryResponse` and `IndustryItem` models in `pipeline/models.py` (see `WORKFLOW.md`, Validation models); the tier-range rule is applied through the model's validation context.
+
 | Field | Type | Rule |
 |---|---|---|
 | `results` | array | Present; length equals the number of leads sent |

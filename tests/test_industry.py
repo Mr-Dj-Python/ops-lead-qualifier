@@ -36,7 +36,10 @@ def settings(config, tmp_path):
 
 
 def lead(lead_id, company="Acme", industry="Logistics", size=100):
-    return Lead(lead_id, "Ann", company, size, industry, "Referral", date(2024, 1, 1))
+    return Lead(
+        lead_id=lead_id, name="Ann", company=company, company_size=size, industry=industry,
+        source="Referral", last_interaction_date=date(2024, 1, 1),
+    )
 
 
 def item(lead_id, tier="best", score=10, confidence="high", reason="Label matches."):
@@ -108,8 +111,8 @@ def score(client, settings, leads):
 def test_scores_every_lead(settings):
     client = ScriptedClient([reply(item("L001"), item("L002", "none", 2, "medium", "Vendor."))])
     result = score(client, settings, [lead("L001"), lead("L002", "Other", "Software")])
-    assert result.results["L001"] == IndustryResult("L001", "best", 10, "high", "Label matches.")
-    assert result.results["L002"] == IndustryResult("L002", "none", 2, "medium", "Vendor.")
+    assert result.results["L001"] == IndustryResult(lead_id="L001", tier="best", industry_fit=10, confidence="high", reason="Label matches.")
+    assert result.results["L002"] == IndustryResult(lead_id="L002", tier="none", industry_fit=2, confidence="medium", reason="Vendor.")
     assert result.api_calls == 1 and result.failed_ids == [] and result.cache_hits == 0
 
 
@@ -361,12 +364,12 @@ def test_cache_can_be_turned_off(settings):
 def test_cache_key_ignores_case_and_spacing_but_not_size():
     assert cache_key(lead("L001", "Acme  Co", "Retail", 50)) == cache_key(lead("L002", " acme co ", "RETAIL", 50))
     assert cache_key(lead("L001", size=50)) != cache_key(lead("L001", size=51))
-    assert cache_key(lead("L001", size=None)) != cache_key(lead("L001", size=0))
+    assert cache_key(lead("L001", size=None)) != cache_key(lead("L001", size=1))
 
 
 def test_cache_creates_its_folder(tmp_path):
     cache = IndustryCache(tmp_path / "deep" / "dir" / "c.json", "fp")
-    cache.put("k", IndustryResult("L1", "best", 10, "high", "r"))
+    cache.put("k", IndustryResult(lead_id="L1", tier="best", industry_fit=10, confidence="high", reason="r"))
     cache.save()
     assert (tmp_path / "deep" / "dir" / "c.json").exists()
 
@@ -385,7 +388,9 @@ def test_cache_creates_its_folder(tmp_path):
     ],
 )
 def test_caps_at_review(tier, confidence, failed, expected):
-    assert IndustryResult("L1", tier, 5, confidence, "r", failed).caps_at_review is expected
+    assert IndustryResult(
+        lead_id="L1", tier=tier, industry_fit=5, confidence=confidence, reason="r", llm_failed=failed
+    ).caps_at_review is expected
 
 
 @pytest.mark.parametrize(

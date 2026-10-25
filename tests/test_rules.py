@@ -179,7 +179,7 @@ def test_new_rule_is_added_with_a_class_and_a_config_entry():
             self.fixed = settings["fixed_score"]
 
         def score(self, lead, reference_date):
-            return RuleResult(self.name, self.fixed, "growth rule")
+            return RuleResult(rule=self.name, score=self.fixed, detail="growth rule")
 
     try:
         built = RuleFactory.create_all({"size": {"bands": [{"min": 1, "score": 5}], "missing_score": 5},

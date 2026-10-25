@@ -151,6 +151,21 @@ sequenceDiagram
 
 ## 5. Stage details
 
+### Validation models (`pipeline/models.py`)
+Every record that moves through the pipeline is a Pydantic model, so bad data is stopped where it enters and named by field:
+
+| Step | Model | What it enforces |
+|---|---|---|
+| Ingestion | `LeadRow` (one CSV row) | Placeholders such as `NA` become empty; `company_size` is a whole number of 1 or more; the date is `YYYY-MM-DD` and not after the reference date; a name or a company is present. A bad size or date is noted and emptied (the lead is kept); anything else drops the row |
+| Ingestion | `Lead` | Id looks like `L001`; strict types; size 1 or more |
+| Rule scoring | `RuleResult` | Score is a whole number from 1 to 10 |
+| LLM request | `LeadPayload` | Only lead id, company (100 characters at most), industry and size are sent; missing values are `(missing)` |
+| LLM reply | `IndustryResponse`, `IndustryItem` | The reply is `{"results": [...]}` (a bare list is accepted); each item is checked on its own: tier and confidence are from the allowed lists (exact case), the score is a whole number (no `true`, no `"10"`) inside its tier's range, the reason is non-empty and cut to 200 characters |
+| Industry result | `IndustryResult` | Frozen record of a validated answer, or the fallback |
+| Decision | `LeadDecision` | Score 1 to 10; priority only for qualified leads; a rejection reason only for rejected leads; ranks are validated when they are assigned |
+
+The internal models use strict mode (no silent conversion of text to numbers). `LeadRow` and `IndustryItem` are lenient on purpose, because they read text from a file and from a model; their custom checks decide what is accepted. A score outside its tier's range fails with the error type `score_out_of_range`, which the scorer treats as clampable after retries.
+
 ### Stage 1: Ingest and clean
 - Read the CSV; assign a unique `lead_id` (L001, L002, ...) to each row.
 - Normalize: trim whitespace, parse dates, convert company_size to an integer.
