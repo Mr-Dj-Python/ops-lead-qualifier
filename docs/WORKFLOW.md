@@ -164,6 +164,8 @@ Every record that moves through the pipeline is a Pydantic model, so bad data is
 | Industry result | `IndustryResult` | Frozen record of a validated answer, or the fallback |
 | Decision | `LeadDecision` | Score 1 to 10; priority only for qualified leads; a rejection reason only for rejected leads; ranks are validated when they are assigned |
 
+Settings and the results handed from one stage to the next are Pydantic models as well, never dataclasses, so validation lives in the model: `DecisionSettings`, `IndustrySettings`, `MessageSettings` and `RetryPolicy` (checked when built from `config.yaml`, with errors that name the config path), `MessageRules`, and the result containers `IngestResult` (with `RowError`), `IndustryScoring`, `MessageRun` and `DecisionSummary` (their counters are validated each time they change). A test fails if a dataclass is added back to the pipeline. `RetryPolicy` rejects unknown keys, so a misspelt `max_attemps` is an error, not silently ignored.
+
 The internal models use strict mode (no silent conversion of text to numbers). `LeadRow` and `IndustryItem` are lenient on purpose, because they read text from a file and from a model; their custom checks decide what is accepted. A score outside its tier's range fails with the error type `score_out_of_range`, which the scorer treats as clampable after retries.
 
 ### Stage 1: Ingest and clean

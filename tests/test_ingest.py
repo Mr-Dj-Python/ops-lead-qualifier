@@ -5,6 +5,7 @@ import pytest
 
 from main import main
 from pipeline.ingest import IngestError, ingest_csv
+from pipeline.models import RowError
 
 HEADER = "name,company,company_size,industry,source,last_interaction_date\n"
 MISSING = ["na", "n/a", "null", "none", "unknown", "unknown source", "unknown sector"]
@@ -127,7 +128,7 @@ def test_future_date_is_rejected(tmp_path):
 def test_row_without_name_and_company_is_dropped(tmp_path):
     result = ingest(write_csv(tmp_path, "NA,,50,SaaS,Referral,2024-01-01\nAnn,Co,10,SaaS,Referral,2024-01-01\n"))
     assert [lead.name for lead in result.leads] == ["Ann"]
-    assert result.errors == [{"row": 2, "reason": "both name and company are missing"}]
+    assert result.errors == [RowError(row=2, reason="both name and company are missing")]
 
 
 def test_company_missing_but_name_present_is_kept(tmp_path):
@@ -138,7 +139,7 @@ def test_company_missing_but_name_present_is_kept(tmp_path):
 def test_wrong_field_count_is_dropped(tmp_path):
     result = ingest(write_csv(tmp_path, "Ann,Co,10\nBo,Co2,10,SaaS,Referral,2024-01-01\n"))
     assert len(result.leads) == 1
-    assert result.errors[0]["row"] == 2 and "expected 6 fields" in result.errors[0]["reason"]
+    assert result.errors[0].row == 2 and "expected 6 fields" in result.errors[0].reason
 
 
 def test_duplicate_keeps_most_recent_interaction(tmp_path):
@@ -150,7 +151,7 @@ def test_duplicate_keeps_most_recent_interaction(tmp_path):
     result = ingest(write_csv(tmp_path, body))
     assert [lead.lead_id for lead in result.leads] == ["L001", "L002"]
     assert result.leads[0].last_interaction_date == date(2024, 1, 10)
-    assert result.errors == [{"row": 2, "reason": "duplicate of row 3 (same name and company)"}]
+    assert result.errors == [RowError(row=2, reason="duplicate of row 3 (same name and company)")]
 
 
 def test_insufficient_data_flag(tmp_path):

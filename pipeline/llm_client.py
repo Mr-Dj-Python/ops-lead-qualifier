@@ -13,8 +13,9 @@ import random
 import re
 import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Callable, Mapping
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from pipeline.config import ConfigError
 
@@ -37,17 +38,23 @@ class LLMAuthError(LLMError):
     """Bad or missing credentials. The whole run must stop; never retried."""
 
 
-@dataclass(frozen=True)
-class RetryPolicy:
-    max_attempts: int = 4
-    base_delay_s: float = 2.0
-    max_delay_s: float = 30.0
+class RetryPolicy(BaseModel):
+    """How often and how patiently a failed call is retried."""
 
-    def __post_init__(self) -> None:
-        if self.max_attempts < 1:
-            raise ConfigError("llm retries max_attempts must be at least 1")
-        if self.base_delay_s < 0 or self.max_delay_s < 0:
-            raise ConfigError("llm retries delays must be 0 or more")
+    model_config = ConfigDict(frozen=True, extra="forbid")  # forbid: a misspelt key is an error
+
+    max_attempts: int = Field(default=4, ge=1)
+    base_delay_s: float = Field(default=2.0, ge=0)
+    max_delay_s: float = Field(default=30.0, ge=0)
+
+    @classmethod
+    def from_config(cls, retries: dict) -> "RetryPolicy":
+        """Build from llm.retries in config.yaml; problems are reported as a ConfigError."""
+        try:
+            return cls.model_validate(retries)
+        except ValidationError as exc:
+            details = "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors())
+            raise ConfigError(f"config llm.retries is invalid: {details}") from exc
 
 
 class LLMAPIClient(ABC):
@@ -224,12 +231,7 @@ def create_llm_client(
     if not isinstance(llm_config.get("model"), str) or not llm_config["model"]:
         raise ConfigError("config llm.model must name the model to use")
     retries = llm_config.get("retries", {})
-    try:
-        policy = RetryPolicy(
-            max_attempts=int(retries.get("max_attempts", 4)),
-            base_delay_s=float(retries.get("base_delay_s", 2)),
-            max_delay_s=float(retries.get("max_delay_s", 30)),
-        )
-    except (TypeError, ValueError) as exc:
-        raise ConfigError(f"config llm.retries is invalid: {exc}") from exc
+    if not isinstance(retries, dict):
+        raise ConfigError("config llm.retries is invalid: it must be a mapping")
+    policy = RetryPolicy.from_config(retries)
     return cls.from_config(llm_config, api_key, policy, sleep)

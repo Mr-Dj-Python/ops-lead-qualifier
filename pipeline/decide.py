@@ -6,28 +6,61 @@ deterministic code. The weighted score is the weighted average of the four facto
 """
 from __future__ import annotations
 
-import math
 from collections import Counter
-from dataclasses import dataclass, field
 from datetime import date
 
-from pipeline.config import ConfigError
-from pipeline.models import IndustryResult, Lead, LeadDecision, RuleResult
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+
+from pipeline.config import ConfigError, config_error, parse_count, parse_number
+from pipeline.models import DecisionSummary, IndustryResult, Lead, LeadDecision, RuleResult
 
 INDUSTRY = "industry"
 QUALIFIED, REVIEW, REJECTED = "qualified", "review", "rejected"
 FACTOR_LABELS = {INDUSTRY: "Industry fit", "size": "Company size", "source": "Lead source", "recency": "Engagement"}
 
 
-@dataclass(frozen=True)
-class DecisionSettings:
+DECISION_PATHS = {  # settings field -> the config path a user would edit
+    "qualified_at": "thresholds.qualified",
+    "review_at": "thresholds.review",
+    "high_priority_at": "priority.high",
+    "stale_days": "caps.stale_days",
+    "reject_size_below": "caps.hard_reject_size_below",
+    "reject_size_above": "caps.hard_reject_size_above",
+}
+
+
+class DecisionSettings(BaseModel):
+    """Weights, thresholds and caps from config.yaml, validated."""
+
+    model_config = ConfigDict(frozen=True)
+
     weights: dict[str, float]  # factor name -> share of the score, adds up to 1
     qualified_at: float
     review_at: float
     high_priority_at: float
-    stale_days: int
-    reject_size_below: int
-    reject_size_above: int
+    stale_days: int = Field(ge=0)
+    reject_size_below: int = Field(ge=0)
+    reject_size_above: int = Field(ge=0)
+
+    @field_validator("qualified_at", "review_at", "high_priority_at", mode="before")
+    @classmethod
+    def _number(cls, value) -> float:
+        return parse_number(value)
+
+    @field_validator("stale_days", "reject_size_below", "reject_size_above", mode="before")
+    @classmethod
+    def _count(cls, value) -> int:
+        return parse_count(value, 0)
+
+    @model_validator(mode="after")
+    def _relations(self) -> "DecisionSettings":
+        if not 1 <= self.review_at < self.qualified_at <= 10:
+            raise ValueError("thresholds must satisfy 1 <= review < qualified <= 10")
+        if not self.qualified_at <= self.high_priority_at <= 10:
+            raise ValueError("priority.high must be between thresholds.qualified and 10")
+        if self.reject_size_below > self.reject_size_above:
+            raise ValueError("caps.hard_reject_size_below must not exceed hard_reject_size_above")
+        return self
 
     @classmethod
     def from_config(cls, config: dict, rule_names: list[str]) -> "DecisionSettings":
@@ -42,49 +75,25 @@ class DecisionSettings:
         if extra:
             raise ConfigError(f"config weights names factors that are not scored: {', '.join(extra)}")
 
-        thresholds, priority, caps = config.get("thresholds"), config.get("priority"), config.get("caps")
-        for name, section in (("thresholds", thresholds), ("priority", priority), ("caps", caps)):
+        sections = {name: config.get(name) for name in ("thresholds", "priority", "caps")}
+        for name, section in sections.items():
             if not isinstance(section, dict):
                 raise ConfigError(f"config '{name}' must be a mapping")
-        qualified_at = _number(thresholds.get("qualified"), "thresholds.qualified")
-        review_at = _number(thresholds.get("review"), "thresholds.review")
-        high_at = _number(priority.get("high"), "priority.high")
-        if not 1 <= review_at < qualified_at <= 10:
-            raise ConfigError("config thresholds must satisfy 1 <= review < qualified <= 10")
-        if not qualified_at <= high_at <= 10:
-            raise ConfigError("config priority.high must be between thresholds.qualified and 10")
-        stale = _count(caps.get("stale_days"), "caps.stale_days")
-        below = _count(caps.get("hard_reject_size_below"), "caps.hard_reject_size_below")
-        above = _count(caps.get("hard_reject_size_above"), "caps.hard_reject_size_above")
-        if below > above:
-            raise ConfigError("config caps.hard_reject_size_below must not exceed hard_reject_size_above")
-        return cls(dict(weights), qualified_at, review_at, high_at, stale, below, above)
-
-
-def _number(value, where: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
-        raise ConfigError(f"config {where} must be a number, got {value!r}")
-    return float(value)
-
-
-def _count(value, where: str) -> int:
-    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-        raise ConfigError(f"config {where} must be a whole number of 0 or more, got {value!r}")
-    return value
-
-
-@dataclass
-class DecisionSummary:
-    total: int
-    counts: dict[str, int]
-    average_score: float
-    highest_score: float
-    lowest_score: float
-    average_factor_scores: dict[str, float]
-    rejection_reasons: list[tuple[str, int]] = field(default_factory=list)  # most common first
-
-    def percent(self, decision: str) -> float:
-        return 100 * self.counts[decision] / self.total if self.total else 0.0
+        thresholds, priority, caps = sections["thresholds"], sections["priority"], sections["caps"]
+        try:
+            return cls.model_validate(
+                {
+                    "weights": dict(weights),
+                    "qualified_at": thresholds.get("qualified"),
+                    "review_at": thresholds.get("review"),
+                    "high_priority_at": priority.get("high"),
+                    "stale_days": caps.get("stale_days"),
+                    "reject_size_below": caps.get("hard_reject_size_below"),
+                    "reject_size_above": caps.get("hard_reject_size_above"),
+                }
+            )
+        except ValidationError as exc:
+            raise config_error(exc, DECISION_PATHS) from exc
 
 
 def decide_leads(

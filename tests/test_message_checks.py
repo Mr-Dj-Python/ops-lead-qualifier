@@ -1,4 +1,3 @@
-import dataclasses
 import json
 from pathlib import Path
 
@@ -28,7 +27,7 @@ def rules(**changes):
         first_name="Oscar", company="Warehouse Automation", industry="Logistics", sender=SENDER,
         variant="warm_followup", call_minutes=15, min_words=40, max_words=100, max_subject_words=10,
     )
-    return dataclasses.replace(base, **changes)
+    return base.model_copy(update=changes)
 
 
 def check(body=WARM, subject="Following up on your referral", **changes):

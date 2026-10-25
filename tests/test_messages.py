@@ -1,4 +1,3 @@
-import dataclasses
 import json
 from datetime import date
 from pathlib import Path
@@ -330,7 +329,7 @@ def test_one_bad_message_does_not_cost_its_batch_mates_theirs(settings):
 
 def test_a_transport_failure_costs_only_that_batch(settings):
     leads = [make_lead(f"L00{n}", company=f"Company {n}") for n in range(1, 4)]
-    one_at_a_time = dataclasses.replace(settings, batch_size=2)
+    one_at_a_time = settings.model_copy(update={"batch_size": 2})
     client = MessageClient([LLMError("down")])
     run = write(client, one_at_a_time, leads)
     assert run.failed_ids == ["L001", "L002"] and set(run.messages) == {"L003"} and run.api_calls == 2
@@ -355,7 +354,7 @@ def test_ids_that_were_not_asked_for_and_duplicates_are_ignored(settings):
 
 def test_the_reply_budget_grows_with_the_batch(settings):
     client = MessageClient()
-    big = dataclasses.replace(settings, batch_size=40, max_tokens=100)
+    big = settings.model_copy(update={"batch_size": 40, "max_tokens": 100})
     write(client, big, [make_lead(f"L{n:03d}", company=f"Company {n}") for n in range(1, 31)])
     assert client.max_tokens_seen == [250 * 30]
 
@@ -371,7 +370,7 @@ def test_a_lead_field_cannot_break_out_of_the_data_block(settings):
 def run_pipeline(filename, config, settings, tmp_path):
     scorers = RuleFactory.create_all(config["rules"])
     leads = ingest_csv(ROOT / "data" / filename, REFERENCE, config["missing_values"]).leads
-    industry_settings = dataclasses.replace(IndustrySettings.from_config(config), cache_path=tmp_path / "c.json")
+    industry_settings = IndustrySettings.from_config(config).model_copy(update={"cache_path": tmp_path / "c.json"})
     industry = IndustryScorer(DataFileClient(config["tiers"]), industry_settings).score(leads)
     decisions = decide_leads(
         leads, score_leads(leads, scorers, REFERENCE), industry.results,

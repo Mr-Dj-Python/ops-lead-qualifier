@@ -1,4 +1,3 @@
-import dataclasses
 import json
 import math
 from pathlib import Path
@@ -32,7 +31,7 @@ def config():
 @pytest.fixture
 def settings(config, tmp_path):
     base = IndustrySettings.from_config(config)
-    return dataclasses.replace(base, batch_size=2, cache_path=tmp_path / "industry.json")
+    return base.model_copy(update={"batch_size": 2, "cache_path": tmp_path / "industry.json"})
 
 
 def lead(lead_id, company="Acme", industry="Logistics", size=100):
@@ -127,7 +126,7 @@ def test_leads_are_sent_in_batches_sorted_by_id(settings):
 def test_input_order_does_not_change_the_outcome(settings, tmp_path):
     leads = [lead(f"L00{n}", company=f"Co{n}") for n in range(1, 6)]
     first = score(ScriptedClient(), settings, leads).results
-    other = dataclasses.replace(settings, cache_path=tmp_path / "other.json")
+    other = settings.model_copy(update={"cache_path": tmp_path / "other.json"})
     second = score(ScriptedClient(), other, list(reversed(leads))).results
     assert first == second
 
@@ -328,7 +327,7 @@ def test_cache_is_discarded_when_the_model_changes(settings):
 
 def test_cache_is_discarded_when_the_prompt_changes(settings):
     score(ScriptedClient(), settings, [lead("L001")])
-    changed = dataclasses.replace(settings, system_prompt=settings.system_prompt + "\nExtra rule.")
+    changed = settings.model_copy(update={"system_prompt": settings.system_prompt + "\nExtra rule."})
     assert score(ScriptedClient(), changed, [lead("L001")]).api_calls == 1
 
 
@@ -355,7 +354,7 @@ def test_damaged_cache_entry_is_asked_again(settings):
 
 
 def test_cache_can_be_turned_off(settings):
-    off = dataclasses.replace(settings, cache_enabled=False)
+    off = settings.model_copy(update={"cache_enabled": False})
     score(ScriptedClient(), off, [lead("L001")])
     assert not settings.cache_path.exists()
     assert score(ScriptedClient(), off, [lead("L001")]).api_calls == 1
@@ -429,7 +428,7 @@ def test_missing_tier_is_rejected(config):
 def test_every_lead_in_the_data_files_gets_an_answer(config, settings, filename, count):
     leads = ingest_csv(ROOT / "data" / filename, date(2024, 1, 21), config["missing_values"]).leads
     client = RulesClient(config["tiers"])
-    full = dataclasses.replace(settings, batch_size=15)
+    full = settings.model_copy(update={"batch_size": 15})
     result = score(client, full, leads)
     assert len(result.results) == count and result.failed_ids == []
     unique = len({cache_key(each) for each in leads})

@@ -329,3 +329,55 @@ class GeneratedMessage(BaseModel):
     subject: str = Field(min_length=1)
     body: str = Field(min_length=1)
     word_count: int = Field(ge=1)
+
+
+# --- results handed from one stage to the next ------------------------------------------------
+
+class RowError(BaseModel):
+    """A CSV row that was dropped, and why."""
+
+    row: int = Field(ge=1)  # the line number in the file (the header is line 1)
+    reason: str = Field(min_length=1)
+
+
+class IngestResult(BaseModel):
+    leads: list[Lead]
+    errors: list[RowError]
+    rows_read: int = Field(ge=0)
+
+
+class IndustryScoring(BaseModel):
+    """What the industry-fit stage returns. The counters are updated while it runs, and every
+    assignment is validated."""
+
+    model_config = ConfigDict(validate_assignment=True)
+
+    results: dict[str, IndustryResult]  # keyed by lead_id, one per lead
+    api_calls: int = Field(default=0, ge=0)
+    cache_hits: int = Field(default=0, ge=0)  # leads answered from the cache
+    failed_ids: list[str] = Field(default_factory=list)  # leads that fell back after retries
+
+
+class MessageRun(BaseModel):
+    """What the message stage returns."""
+
+    model_config = ConfigDict(validate_assignment=True)
+
+    messages: dict[str, GeneratedMessage]  # keyed by lead_id; only leads that got a valid email
+    api_calls: int = Field(default=0, ge=0)
+    failed_ids: list[str] = Field(default_factory=list)  # qualified leads left without a message
+
+
+class DecisionSummary(BaseModel):
+    """Counts, average and range of the weighted score, and why leads were rejected."""
+
+    total: int = Field(ge=0)
+    counts: dict[Decision, int]
+    average_score: float
+    highest_score: float
+    lowest_score: float
+    average_factor_scores: dict[str, float]
+    rejection_reasons: list[tuple[str, int]] = Field(default_factory=list)  # most common first
+
+    def percent(self, decision: str) -> float:
+        return 100 * self.counts[decision] / self.total if self.total else 0.0

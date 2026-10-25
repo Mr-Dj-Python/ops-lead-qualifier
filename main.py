@@ -181,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  leads with unparsed values: {noted}")
     print(f"  flagged insufficient_data:  {flagged}")
     for error in result.errors:
-        print(f"  dropped row {error['row']}: {error['reason']}")
+        print(f"  dropped row {error.row}: {error.reason}")
     print(f"Scored {len(scores)} leads with rules: {', '.join(scorer.name for scorer in scorers)}")
     if industry is not None:
         print(

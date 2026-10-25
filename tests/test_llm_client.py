@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import httpx2
 import openai
 import pytest
+from pydantic import ValidationError
 
 from pipeline import llm_client
 from pipeline.config import ConfigError
@@ -105,11 +106,21 @@ def test_other_errors_are_not_retried():
     assert client.calls == 1
 
 
-def test_retry_policy_rejects_nonsense():
-    with pytest.raises(ConfigError):
-        RetryPolicy(max_attempts=0)
-    with pytest.raises(ConfigError):
-        RetryPolicy(base_delay_s=-1)
+def test_retry_policy_is_validated_by_the_model():
+    for bad in ({"max_attempts": 0}, {"base_delay_s": -1}, {"max_delay_s": -0.5}, {"max_attempts": 2.5}):
+        with pytest.raises(ValidationError):
+            RetryPolicy(**bad)
+    assert RetryPolicy() == RetryPolicy(max_attempts=4, base_delay_s=2.0, max_delay_s=30.0)
+    with pytest.raises(ValidationError):
+        RetryPolicy().max_attempts = 9  # frozen
+
+
+def test_retry_policy_from_config_reports_a_config_error_naming_the_field():
+    assert RetryPolicy.from_config({"max_attempts": 3, "base_delay_s": 1}).max_attempts == 3
+    with pytest.raises(ConfigError, match="config llm.retries is invalid: max_attempts"):
+        RetryPolicy.from_config({"max_attempts": 0})
+    with pytest.raises(ConfigError, match="max_attemps"):  # a misspelt key is an error, not ignored
+        RetryPolicy.from_config({"max_attemps": 3})
 
 
 # --- OpenAI client -------------------------------------------------------------------------

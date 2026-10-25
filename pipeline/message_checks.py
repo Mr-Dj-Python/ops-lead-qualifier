@@ -1,12 +1,14 @@
 """The rules every generated message must pass (docs/LOW_LEVEL_DESIGN.md section 5).
 
 `check_message` returns every problem it finds as a plain sentence. The sentences double as
-feedback in the retry prompt, so each one says what to fix. No pydantic or LLM code in here.
+feedback in the retry prompt, so each one says what to fix. No LLM code in here.
 """
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 VARIANTS = ("warm_followup", "value_led", "reengagement")
 SIGN_OFF = "Best regards,"
@@ -56,17 +58,26 @@ _NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
 _MONEY_OR_PERCENT = re.compile(r"[$€£¥%]")
 
 
-@dataclass(frozen=True)
-class MessageRules:
-    first_name: str
+class MessageRules(BaseModel):
+    """The facts a message is checked against: who it is for and the limits from config."""
+
+    model_config = ConfigDict(frozen=True)
+
+    first_name: str = Field(min_length=1)
     company: str | None  # None or "(missing)" when unknown
     industry: str | None
-    sender: str  # the line after "Best regards,"
-    variant: str
-    call_minutes: int
-    min_words: int
-    max_words: int
-    max_subject_words: int
+    sender: str = Field(min_length=1)  # the line after "Best regards,"
+    variant: Literal["warm_followup", "value_led", "reengagement"]
+    call_minutes: int = Field(ge=1)
+    min_words: int = Field(ge=1)
+    max_words: int = Field(ge=1)
+    max_subject_words: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    def _word_range(self) -> "MessageRules":
+        if self.min_words > self.max_words:
+            raise ValueError("min_words must not exceed max_words")
+        return self
 
 
 def check_message(subject: str, body: str, rules: MessageRules) -> list[str]:

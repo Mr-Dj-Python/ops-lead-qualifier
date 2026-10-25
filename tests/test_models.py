@@ -1,4 +1,3 @@
-import dataclasses
 import json
 from datetime import date
 from pathlib import Path
@@ -7,17 +6,26 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 from pipeline.decide import DecisionSettings, decide_leads
+from pipeline.industry import IndustrySettings
+from pipeline.message_checks import MessageRules
+from pipeline.messages import MessageSettings
+from pipeline.llm_client import RetryPolicy
 from pipeline.industry import IndustryScorer, IndustrySettings
 from pipeline.ingest import IngestError, ingest_csv
 from pipeline.config import load_config
 from pipeline.models import (
     IndustryItem,
+    DecisionSummary,
     IndustryResponse,
     IndustryResult,
+    IndustryScoring,
+    IngestResult,
     Lead,
     LeadDecision,
     LeadPayload,
     LeadRow,
+    MessageRun,
+    RowError,
     RuleResult,
     clean_text,
 )
@@ -143,7 +151,7 @@ def test_ingestion_returns_lead_models(tmp_path):
 def test_a_row_with_a_bad_size_and_no_name_or_company_is_dropped_with_that_reason(tmp_path):
     result = ingest(tmp_path, "NA,NA,abc,SaaS,Referral,2024-01-01\nAnn,Co,10,SaaS,Referral,2024-01-01\n")
     assert [lead.name for lead in result.leads] == ["Ann"]
-    assert result.errors == [{"row": 2, "reason": "both name and company are missing"}]
+    assert result.errors == [RowError(row=2, reason="both name and company are missing")]
 
 
 def test_both_soft_fields_bad_gives_two_notes_and_keeps_the_lead(tmp_path):
@@ -327,7 +335,7 @@ def test_every_record_in_the_pipeline_is_a_validated_model(tmp_path):
     config = load_config(ROOT / "config.yaml", env=ENV)
     scorers = RuleFactory.create_all(config["rules"])
     leads = ingest_csv(ROOT / "data" / "leads_testing.csv", REFERENCE, config["missing_values"]).leads
-    settings = dataclasses.replace(IndustrySettings.from_config(config), cache_path=tmp_path / "c.json")
+    settings = IndustrySettings.from_config(config).model_copy(update={"cache_path": tmp_path / "c.json"})
     industry = IndustryScorer(DataFileClient(config["tiers"]), settings).score(leads)
     rules = score_leads(leads, scorers, REFERENCE)
     decisions = decide_leads(
@@ -344,7 +352,7 @@ def test_decisions_serialize_to_json_and_load_back_unchanged(tmp_path):
     config = load_config(ROOT / "config.yaml", env=ENV)
     scorers = RuleFactory.create_all(config["rules"])
     leads = ingest_csv(ROOT / "data" / "leads_training.csv", REFERENCE, config["missing_values"]).leads
-    settings = dataclasses.replace(IndustrySettings.from_config(config), cache_path=tmp_path / "c.json")
+    settings = IndustrySettings.from_config(config).model_copy(update={"cache_path": tmp_path / "c.json"})
     industry = IndustryScorer(DataFileClient(config["tiers"]), settings).score(leads)
     decisions = decide_leads(
         leads, score_leads(leads, scorers, REFERENCE), industry.results,
@@ -357,7 +365,124 @@ def test_decisions_serialize_to_json_and_load_back_unchanged(tmp_path):
 
 def test_a_reply_item_with_the_wrong_tier_case_is_retried(tmp_path):
     config = load_config(ROOT / "config.yaml", env=ENV)
-    settings = dataclasses.replace(IndustrySettings.from_config(config), cache_path=tmp_path / "c.json")
+    settings = IndustrySettings.from_config(config).model_copy(update={"cache_path": tmp_path / "c.json"})
     client = ScriptedClient([reply(item("L001", tier="Best")), reply(item("L001"))])
     result = IndustryScorer(client, settings).score([Lead(lead_id="L001", company="Acme", industry="Logistics", company_size=100)])
     assert result.api_calls == 2 and result.results["L001"].tier == "best"
+
+
+# --- settings and result containers are models, not dataclasses -------------------------------
+
+def test_no_dataclasses_are_left_in_the_pipeline():
+    sources = list((ROOT / "pipeline").glob("*.py")) + [ROOT / "main.py"]
+    assert [path.name for path in sources if "dataclass" in path.read_text()] == []
+
+
+@pytest.mark.parametrize("model", [DecisionSettings, IndustrySettings, MessageSettings, MessageRules, RetryPolicy,
+                                   IngestResult, IndustryScoring, MessageRun, DecisionSummary, RowError])
+def test_every_stage_record_is_a_pydantic_model(model):
+    assert issubclass(model, BaseModel)
+
+
+def decision_settings(**changes):
+    base = dict(weights={"industry": 1.0}, qualified_at=7, review_at=5, high_priority_at=8.5,
+                stale_days=180, reject_size_below=10, reject_size_above=5000)
+    return DecisionSettings(**{**base, **changes})
+
+
+@pytest.mark.parametrize(
+    "changes, message",
+    [
+        ({"review_at": 8}, "review < qualified"),
+        ({"qualified_at": 11}, "review < qualified"),
+        ({"high_priority_at": 6}, "priority.high must be between"),
+        ({"reject_size_below": 6000}, "must not exceed"),
+        ({"stale_days": -1}, "whole number of 0 or more"),
+        ({"qualified_at": "high"}, "must be a number"),
+        ({"weights": {"industry": "lots"}}, "weights"),
+    ],
+)
+def test_decision_settings_validate_themselves(changes, message):
+    with pytest.raises(ValidationError, match=message):
+        decision_settings(**changes)
+
+
+def test_decision_settings_are_frozen_and_keyword_only():
+    settings = decision_settings()
+    with pytest.raises(ValidationError):
+        settings.stale_days = 1
+    with pytest.raises(TypeError):
+        DecisionSettings({"industry": 1.0}, 7, 5, 8.5, 180, 10, 5000)
+
+
+def message_settings(config_env=None):
+    return MessageSettings.from_config(load_config(ROOT / "config.yaml", env=config_env or ENV))
+
+
+def test_message_settings_validate_their_fields_directly():
+    good = message_settings()
+    for changes in ({"batch_size": 0}, {"min_words": 0}, {"temperature": -1}, {"sender": 5}):
+        with pytest.raises(ValidationError):
+            MessageSettings(**{**good.model_dump(), **changes})
+    with pytest.raises(ValidationError, match="min_words must not exceed max_words"):
+        MessageSettings(**{**good.model_dump(), "min_words": 200})
+    with pytest.raises(ValidationError):
+        good.batch_size = 3  # frozen
+
+
+def test_message_rules_validate_themselves():
+    base = dict(first_name="Oscar", company="Acme", industry="Retail", sender="Dana", variant="value_led",
+                call_minutes=15, min_words=40, max_words=100, max_subject_words=10)
+    assert MessageRules(**base).first_name == "Oscar"
+    for changes in ({"variant": "cold_call"}, {"first_name": ""}, {"sender": ""}, {"call_minutes": 0}, {"min_words": 101}):
+        with pytest.raises(ValidationError):
+            MessageRules(**{**base, **changes})
+
+
+def test_industry_settings_validate_their_fields_directly():
+    config = load_config(ROOT / "config.yaml", env=ENV)
+    good = IndustrySettings.from_config(config)
+    assert good.batch_size == 10 and good.tier_ranges["best"] == (9, 10)
+    for changes in ({"batch_size": 0}, {"temperature": -1}, {"max_tokens": 0}, {"validation_retries": -1}):
+        with pytest.raises(ValidationError):
+            IndustrySettings(**{**good.model_dump(), **changes})
+    with pytest.raises(ValidationError, match="tiers.best.score_range"):
+        IndustrySettings(**{**good.model_dump(), "tier_ranges": {"best": [10, 9]}})
+
+
+def test_row_error_and_ingest_result_are_validated():
+    assert RowError(row=2, reason="x").row == 2
+    for bad in ({"row": 0, "reason": "x"}, {"row": 2, "reason": ""}, {"row": None, "reason": "x"}):
+        with pytest.raises(ValidationError):
+            RowError(**bad)
+    with pytest.raises(ValidationError):
+        IngestResult(leads=[], errors=[], rows_read=-1)
+    with pytest.raises(ValidationError):
+        IngestResult(leads=["not a lead"], errors=[], rows_read=0)
+
+
+def test_run_counters_are_validated_when_they_change():
+    scoring = IndustryScoring(results={})
+    scoring.api_calls += 1
+    scoring.failed_ids.append("L001")
+    assert scoring.api_calls == 1 and scoring.failed_ids == ["L001"]
+    with pytest.raises(ValidationError):
+        scoring.api_calls = -1
+    run = MessageRun(messages={})
+    run.api_calls += 2
+    assert run.api_calls == 2
+    with pytest.raises(ValidationError):
+        run.api_calls = "many"
+
+
+def test_decision_summary_percent():
+    summary = DecisionSummary(
+        total=4, counts={"qualified": 1, "review": 2, "rejected": 1}, average_score=5.0,
+        highest_score=9.0, lowest_score=2.0, average_factor_scores={"industry": 5.0},
+    )
+    assert summary.percent("review") == 50.0
+    assert DecisionSummary(total=0, counts={"qualified": 0, "review": 0, "rejected": 0}, average_score=0,
+                           highest_score=0, lowest_score=0, average_factor_scores={}).percent("qualified") == 0.0
+    with pytest.raises(ValidationError):
+        DecisionSummary(total=1, counts={"maybe": 1}, average_score=1, highest_score=1, lowest_score=1,
+                        average_factor_scores={})
