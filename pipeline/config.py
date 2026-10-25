@@ -34,4 +34,17 @@ def load_config(path: str | Path) -> dict:
     missing_values = config.get("missing_values")
     if not isinstance(missing_values, list) or not all(isinstance(v, str) for v in missing_values):
         raise ConfigError("config 'missing_values' must be a list of strings")
+
+    weights = config.get("weights")
+    if (
+        not isinstance(weights, dict)
+        or not weights
+        or not all(isinstance(w, (int, float)) and not isinstance(w, bool) and w >= 0 for w in weights.values())
+    ):
+        raise ConfigError("config 'weights' must map each factor to a number of 0 or more")
+    if abs(sum(weights.values()) - 1) > 1e-6:
+        raise ConfigError(f"config 'weights' must add up to 1, got {sum(weights.values()):g}")
+
+    if not isinstance(config.get("rules"), dict) or not config["rules"]:
+        raise ConfigError("config 'rules' must be a non-empty mapping")
     return config

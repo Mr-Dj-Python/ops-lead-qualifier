@@ -3,8 +3,8 @@
 Usage:
     python main.py --input data/leads_full_scale_100.csv [--strict] [--reference-date YYYY-MM-DD]
 
-Currently runs Stage 1 (ingestion). Exits with status 1 and a message on stderr if the
-file or config cannot be used.
+Currently runs Stage 1 (ingestion) and Stage 2 (rule scoring). Exits with status 1 and a
+message on stderr if the file or config cannot be used.
 """
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from datetime import date
 
 from pipeline.config import ConfigError, load_config, parse_iso_date
 from pipeline.ingest import IngestError, ingest_csv
+from pipeline.rules import RuleFactory, score_leads
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -28,6 +29,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--strict",
         action="store_true",
         help="fail on any dropped row or unparseable value instead of reporting it",
+    )
+    parser.add_argument(
+        "--show-scores",
+        action="store_true",
+        help="print each lead's rule scores (size, source, recency)",
     )
     return parser
 
@@ -53,6 +59,8 @@ def main(argv: list[str] | None = None) -> int:
             missing_values=config["missing_values"],
             strict=args.strict,
         )
+        scorers = RuleFactory.create_all(config["rules"])
+        scores = score_leads(result.leads, scorers, reference_date)
     except (ConfigError, IngestError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -67,6 +75,14 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  flagged insufficient_data:  {flagged}")
     for error in result.errors:
         print(f"  dropped row {error['row']}: {error['reason']}")
+    print(f"Scored {len(scores)} leads with rules: {', '.join(scorer.name for scorer in scorers)}")
+    if args.show_scores:
+        names = [scorer.name for scorer in scorers]
+        print("  " + f"{'lead':<6}{'company':<32}" + "".join(f"{name:>9}" for name in names))
+        for lead in result.leads:
+            company = (lead.company or lead.name or "")[:30]
+            cells = "".join(f"{scores[lead.lead_id][name].score:>9}" for name in names)
+            print("  " + f"{lead.lead_id:<6}{company:<32}" + cells)
     return 0
 
 

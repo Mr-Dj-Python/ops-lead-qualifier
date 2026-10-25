@@ -175,6 +175,8 @@ sequenceDiagram
 
 All bands live in `config.yaml`, not in code.
 
+**Implementation (factory pattern):** each factor is a `RuleScorer` subclass in `pipeline/rules.py` (`SizeRule`, `SourceRule`, `RecencyRule`), registered by name with `@register_rule`. `RuleFactory.create_all(config["rules"])` builds the scorers listed under `rules:` in `config.yaml`. To add an attribute rule, write one new class and add one config entry; no other code changes. Every rule returns a score (1-10) and a short `detail` that feeds the per-lead explanation.
+
 ### Stage 3: LLM scoring (batched)
 - **Factor:** industry fit (weight **40%**, the largest because it separates buyers from non-buyers in this product).
 - Input per lead: `lead_id`, company, industry label, company size.
