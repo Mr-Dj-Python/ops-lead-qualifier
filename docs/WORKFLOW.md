@@ -182,7 +182,7 @@ All bands live in `config.yaml`, not in code.
 - Input per lead: `lead_id`, company, industry label, company size.
 - The prompt contains the tier table from section 3 and the name-signal rule.
 - Output per lead: `{"lead_id": "L001", "industry_fit": 9, "tier": "best", "confidence": "high", "reason": "<max 20 words>"}`. The `unknown` tier (score 5) and the `confidence` field are used when the label and name do not make the business clear; full prompt text is in `LOW_LEVEL_DESIGN.md`.
-- Settings: batch of 10-20 leads, temperature 0, JSON mode or schema, results keyed by `lead_id`.
+- Settings: batches of `LLM_BATCH_SIZE` leads (default 10, set in `.env`; `config.yaml` refers to it as `${LLM_BATCH_SIZE:-10}`), temperature 0, JSON mode or schema, results keyed by `lead_id`. The reply token budget grows with the batch (80 tokens per lead) so a large batch is never cut off mid-JSON. 100 leads at the default make 10 API calls, never one call per lead.
 - Validation: every id present, integer score 1-10 inside the tier's range, tier in {best, hard, none, unknown}, confidence in {high, medium, low}, reason present.
 - Failure handling:
   - Invalid or missing items: retry only those, up to 2 times.
@@ -198,7 +198,9 @@ All bands live in `config.yaml`, not in code.
   - `5.0 - 6.9` review
   - `< 5.0` rejected
 - **Override rule:** if industry tier is `none`, cap the decision at `review` at most, and if size is also <10 or >5000, force `rejected`. This stops strong source or recency scores from pushing a wrong-industry lead into the queue.
-- **Additional caps (at most `review`):** industry tier `unknown`, LLM confidence `low`, `insufficient_data`, or no contact for more than 180 days (a stale lead needs re-validation before outreach).
+- **Additional caps (at most `review`):** industry tier `unknown`, LLM confidence `low`, `insufficient_data`, or no contact for more than 180 days (a stale lead needs re-validation before outreach). A cap only matters when the score would have qualified the lead; a lower score keeps its own decision.
+- **Forced review:** a lead whose LLM scoring failed (`llm_failed`) or that has too little data (`insufficient_data`) goes to `review` even when its weighted score is below the review line, because the number means little. A hard reject (below) still wins.
+- **Weighted score:** the weighted average of the four 1-10 factor scores (the weights add up to 1), rounded to 2 decimals. Each factor's points are `score x weight`, so the points always add up to the final score. All leads are ranked from best fit to lowest: highest score first, ties broken by the most recent contact, then lead id. `overall_rank` runs over every lead; `priority_rank` numbers only the qualified ones.
 - Priority rank: qualified leads sorted by score, ties broken by most recent interaction. Review leads are listed separately, also sorted by score.
 - Priority label for qualified leads: `HIGH` (score 8.5 and above) or `MEDIUM` (7.0 to 8.49). Review and rejected leads have no priority label.
 - Rejection reason = the lowest-scoring factor(s), used for the "common rejection reasons" stat.
@@ -210,9 +212,11 @@ All bands live in `config.yaml`, not in code.
     Company size  (25%): 10/10 -> 2.50 pts  (50 employees, target range)
     Lead source   (20%): 10/10 -> 2.00 pts  (inbound demo request)
     Engagement    (15%): 10/10 -> 1.50 pts  (6 days since contact)
-    Rule applied: industry tier "none" caps the decision at review.
+    Rule applied: score is in the review band (5 to below 7)
   ```
+  A rule line appears only when it changed the outcome, for example `industry tier "none" caps the decision at review` for a no-fit lead whose score reached 7.0 or more.
   Explanations are assembled by code from the factor scores, so they are consistent and cannot contradict the decision. The LLM contributes only the one-line industry reason.
+- **Summary and ranked table:** `python main.py --input ... --score-industry` prints the decision counts and percentages, the average, highest and lowest weighted score, the average of each factor, the most common rejection reasons, and then every lead from best fit to lowest (rank, lead, company, industry label, tier, the four factor scores, weighted score, decision, priority). `--explain` also prints each lead's breakdown.
 - **Consistency controls:** industry results are cached by the normalized key (company, industry, size) so identical inputs always get the same tier within and across runs; batch order does not change a lead's result (tested in section 8).
 
 ### Stage 5: Message generation (batched LLM)

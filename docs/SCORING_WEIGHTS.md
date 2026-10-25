@@ -88,6 +88,8 @@ Measured from the report date to the lead's last interaction.
 
 **Safety rule:** a lead in a "No fit" industry can never be Qualified, however strong its other scores. If it is also under 10 or over 5,000 employees, it is Rejected outright.
 
+**Other rules.** A lead whose industry is unclear, or that has little data, or that has had no contact for more than 180 days can be Reviewed but never Qualified. A lead the AI could not score at all is sent to Review, not Rejected. Qualified leads are labeled HIGH priority at 8.5 and above and MEDIUM below that.
+
 **Priority order** among Qualified leads: highest score first; if tied, most recently active first.
 
 ---

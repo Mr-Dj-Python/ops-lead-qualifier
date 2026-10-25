@@ -7,8 +7,9 @@ Scoring weights are read from .env (WEIGHT_INDUSTRY, WEIGHT_SIZE, WEIGHT_SOURCE 
 WEIGHT_RECENCY, referenced from config.yaml); they must add up to 1.
 
 Runs Stage 1 (ingestion) and Stage 2 (rule scoring). With --score-industry it also runs
-Stage 3 (LLM industry fit), which needs the API key named by llm.api_key_env in .env.
-Exits with status 1 and a message on stderr if the file, config or API key cannot be used.
+Stage 3 (LLM industry fit, which needs the API key named by llm.api_key_env in .env, in
+batches of LLM_BATCH_SIZE, default 10) and Stage 4 (weighted score, decision and ranking,
+printed from best fit to lowest). Exits with status 1 and a message on stderr if the file, config or API key cannot be used.
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ import sys
 from datetime import date
 
 from pipeline.config import ConfigError, load_config, load_env, parse_iso_date
+from pipeline.decide import DecisionSettings, decide_leads, summarize
 from pipeline.industry import IndustryScorer, IndustrySettings
 from pipeline.ingest import IngestError, ingest_csv
 from pipeline.llm_client import LLMAuthError, create_llm_client
@@ -47,6 +49,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="also score industry fit with the LLM (needs the API key in .env)",
     )
     parser.add_argument(
+        "--explain",
+        action="store_true",
+        help="with --score-industry, print each lead's score breakdown and the rules applied",
+    )
+    parser.add_argument(
         "--show-scores",
         action="store_true",
         help="print each lead's factor scores (size, source, recency, and industry if scored)",
@@ -64,6 +71,41 @@ def resolve_reference_date(cli_value: str | None, config: dict) -> date:
         raise ConfigError(f"invalid reference date: {exc}") from exc
 
 
+SHORT_NAMES = {"industry": "ind", "size": "size", "source": "src", "recency": "rec"}
+
+
+def print_ranking(decisions, summary, explain: bool) -> None:
+    """Summary lines, then every lead from best fit to lowest."""
+    counts = ", ".join(f"{name} {summary.counts[name]} ({summary.percent(name):.0f}%)" for name in summary.counts)
+    print(f"Decisions: {counts}")
+    print(
+        f"Weighted score: average {summary.average_score:g}, "
+        f"highest {summary.highest_score:g}, lowest {summary.lowest_score:g}"
+    )
+    print("Average factor scores: " + ", ".join(f"{n} {v:g}" for n, v in summary.average_factor_scores.items()))
+    if summary.rejection_reasons:
+        print("Rejection reasons: " + "; ".join(f"{reason} ({count})" for reason, count in summary.rejection_reasons))
+    factors = list(summary.average_factor_scores)
+    print()
+    print(
+        f"  {'rank':>4}  {'lead':<5} {'company':<30} {'industry':<20} {'tier':<8}"
+        + "".join(f"{SHORT_NAMES.get(name, name[:4]):>5}" for name in factors)
+        + f"{'score':>7}  {'decision':<9} priority"
+    )
+    for d in decisions:
+        company = (d.company or d.name or "")[:30]
+        priority = f"{d.priority} #{d.priority_rank}" if d.priority else ""
+        print(
+            f"  {d.overall_rank:>4}  {d.lead_id:<5} {company:<30} {(d.industry_label or '-')[:20]:<20} {d.tier:<8}"
+            + "".join(f"{d.factor_scores[name]:>5}" for name in factors)
+            + f"{d.final_score:>7g}  {d.decision:<9} {priority}"
+        )
+    if explain:
+        for d in decisions:
+            print()
+            print(d.explanation)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
@@ -78,11 +120,14 @@ def main(argv: list[str] | None = None) -> int:
         )
         scorers = RuleFactory.create_all(config["rules"])
         scores = score_leads(result.leads, scorers, reference_date)
-        industry = None
+        industry = decisions = summary = None
         if args.score_industry:
             settings = IndustrySettings.from_config(config)
+            decision_settings = DecisionSettings.from_config(config, [scorer.name for scorer in scorers])
             client = create_llm_client(config.get("llm", {}), env)
             industry = IndustryScorer(client, settings).score(result.leads)
+            decisions = decide_leads(result.leads, scores, industry.results, decision_settings, reference_date)
+            summary = summarize(decisions, decision_settings)
     except (ConfigError, IngestError, LLMAuthError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -108,23 +153,19 @@ def main(argv: list[str] | None = None) -> int:
         )
         if industry.failed_ids:
             print(f"  fallback leads: {', '.join(industry.failed_ids)}")
-    if args.show_scores:
+    if decisions is not None:
+        print_ranking(decisions, summary, args.explain)
+    elif args.show_scores:
         names = [scorer.name for scorer in scorers]
-        extra = f"{'fit':>9}  tier" if industry is not None else ""
         print(
             "  " + f"{'lead':<6}{'company':<32}{'industry':<22}"
-            + "".join(f"{name:>9}" for name in names) + extra
+            + "".join(f"{name:>9}" for name in names)
         )
         for lead in result.leads:
             company = (lead.company or lead.name or "")[:30]
-            cells = "".join(f"{scores[lead.lead_id][name].score:>9}" for name in names)
-            if industry is not None:
-                fit = industry.results[lead.lead_id]
-                cells += f"{fit.industry_fit:>9}  {fit.tier}" + ("*" if fit.caps_at_review else "")
             label = (lead.industry or "-")[:20]
+            cells = "".join(f"{scores[lead.lead_id][name].score:>9}" for name in names)
             print("  " + f"{lead.lead_id:<6}{company:<32}{label:<22}" + cells)
-        if industry is not None:
-            print("  (* = capped at review: unknown tier, low confidence or LLM failure)")
     return 0
 
 

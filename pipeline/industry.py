@@ -29,6 +29,7 @@ CONFIDENCES = ("high", "medium", "low")
 MAX_COMPANY_CHARS = 100
 MAX_REASON_CHARS = 200
 FAILED_REASON = "LLM scoring failed"
+TOKENS_PER_LEAD = 80  # reply budget per lead; keeps a large batch from being cut off mid-JSON
 
 
 @dataclass(frozen=True)
@@ -87,10 +88,13 @@ class IndustrySettings:
         scoring = llm.get("scoring") if isinstance(llm, dict) else None
         if not isinstance(scoring, dict):
             raise ConfigError("config llm.scoring must be a mapping")
-        batch_size, max_tokens = scoring.get("batch_size"), scoring.get("max_tokens")
+        batch_size, max_tokens = _whole_number(scoring.get("batch_size")), scoring.get("max_tokens")
         temperature = scoring.get("temperature")
-        if not isinstance(batch_size, int) or isinstance(batch_size, bool) or batch_size < 1:
-            raise ConfigError("config llm.scoring.batch_size must be a whole number of 1 or more")
+        if batch_size is None or batch_size < 1:
+            raise ConfigError(
+                f"config llm.scoring.batch_size must be a whole number of 1 or more, "
+                f"got {scoring.get('batch_size')!r} (set LLM_BATCH_SIZE in .env)"
+            )
         if not isinstance(max_tokens, int) or isinstance(max_tokens, bool) or max_tokens < 1:
             raise ConfigError("config llm.scoring.max_tokens must be a whole number of 1 or more")
         if isinstance(temperature, bool) or not isinstance(temperature, (int, float)) or temperature < 0:
@@ -186,6 +190,17 @@ def _extract_json(raw: str):
     if start != -1 and end > start:
         return json.loads(text[start : end + 1])
     raise ValueError("no JSON object found")
+
+
+def _whole_number(value) -> int | None:
+    """An int, or text such as "10" (config values filled in from .env are text)."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and re.fullmatch(r"\s*\d+\s*", value):
+        return int(value)
+    return None
 
 
 def _whole_score(value) -> int | None:
@@ -290,7 +305,8 @@ class IndustryScorer:
             try:
                 raw = self.client.complete(
                     settings.system_prompt, user_prompt,
-                    temperature=settings.temperature, max_tokens=settings.max_tokens,
+                    temperature=settings.temperature,
+                    max_tokens=max(settings.max_tokens, TOKENS_PER_LEAD * len(pending)),
                 )
             except LLMAuthError:
                 raise
