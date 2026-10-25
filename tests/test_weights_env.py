@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -8,8 +9,13 @@ from pipeline.config import ConfigError, load_config, load_env
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "config.yaml"
 DATA = ROOT / "data" / "leads_training.csv"
-DEFAULTS = {"industry": 0.40, "size": 0.25, "source": 0.20, "recency": 0.15}
 WEIGHT_VARS = ["WEIGHT_INDUSTRY", "WEIGHT_SIZE", "WEIGHT_SOURCE", "WEIGHT_RECENCY"]
+DEFAULT_ENV = {
+    "WEIGHT_INDUSTRY": "0.40",
+    "WEIGHT_SIZE": "0.25",
+    "WEIGHT_SOURCE": "0.20",
+    "WEIGHT_RECENCY": "0.15",
+}
 
 
 @pytest.fixture
@@ -18,84 +24,101 @@ def clean_env(monkeypatch):
         monkeypatch.delenv(name, raising=False)
 
 
-# --- load_config ---------------------------------------------------------------------------
-
-def test_yaml_weights_are_used_when_no_env_is_set():
-    config = load_config(CONFIG, env={})
-    assert config["weights"] == DEFAULTS
-    assert config["weights_overridden"] == []
+def write_env(tmp_path, **values):
+    path = tmp_path / ".env"
+    path.write_text("".join(f"{key}={value}\n" for key, value in values.items()))
+    return path
 
 
-def test_all_four_weights_can_be_overridden():
+# --- config.yaml refers to the .env values -------------------------------------------------
+
+def test_config_yaml_holds_placeholders_not_numbers():
+    text = CONFIG.read_text()
+    for name in WEIGHT_VARS:
+        assert "${" + name + "}" in text
+
+
+def test_weights_come_from_the_env_values():
+    config = load_config(CONFIG, env=DEFAULT_ENV)
+    assert config["weights"] == {"industry": 0.40, "size": 0.25, "source": 0.20, "recency": 0.15}
+
+
+def test_changing_the_env_values_changes_the_weights():
     env = {"WEIGHT_INDUSTRY": "0.5", "WEIGHT_SIZE": "0.2", "WEIGHT_SOURCE": "0.2", "WEIGHT_RECENCY": "0.1"}
-    config = load_config(CONFIG, env=env)
-    assert config["weights"] == {"industry": 0.5, "size": 0.2, "source": 0.2, "recency": 0.1}
-    assert sorted(config["weights_overridden"]) == ["industry", "recency", "size", "source"]
+    assert load_config(CONFIG, env=env)["weights"] == {"industry": 0.5, "size": 0.2, "source": 0.2, "recency": 0.1}
 
 
-def test_overriding_a_subset_keeps_the_yaml_values_for_the_rest():
-    env = {"WEIGHT_INDUSTRY": "0.35", "WEIGHT_RECENCY": "0.20"}
-    config = load_config(CONFIG, env=env)
-    assert config["weights"] == {"industry": 0.35, "size": 0.25, "source": 0.20, "recency": 0.20}
-    assert sorted(config["weights_overridden"]) == ["industry", "recency"]
+def test_zero_weight_is_allowed():
+    env = {**DEFAULT_ENV, "WEIGHT_RECENCY": "0", "WEIGHT_INDUSTRY": "0.55"}
+    assert load_config(CONFIG, env=env)["weights"]["recency"] == 0
 
 
-def test_override_that_breaks_the_sum_is_rejected_and_shows_the_weights():
-    with pytest.raises(ConfigError, match=r"add up to 1, got 1\.1.*industry 0\.5"):
-        load_config(CONFIG, env={"WEIGHT_INDUSTRY": "0.5"})
+def test_whitespace_around_values_is_ignored():
+    assert load_config(CONFIG, env={**DEFAULT_ENV, "WEIGHT_SIZE": " 0.25 "})["weights"]["size"] == 0.25
 
 
-def test_env_names_are_case_insensitive_after_the_prefix():
-    config = load_config(CONFIG, env={"WEIGHT_industry": "0.40"})
-    assert config["weights_overridden"] == ["industry"]
+@pytest.mark.parametrize("missing", WEIGHT_VARS)
+def test_missing_variable_is_named_in_the_error(missing):
+    env = {key: value for key, value in DEFAULT_ENV.items() if key != missing}
+    with pytest.raises(ConfigError, match=rf"weights\.\w+ refers to \$\{{{missing}\}}.*add {missing} to \.env"):
+        load_config(CONFIG, env=env)
+
+
+def test_misspelled_variable_in_env_shows_up_as_a_missing_one():
+    env = {key: value for key, value in DEFAULT_ENV.items() if key != "WEIGHT_RECENCY"} | {"WEIGHT_RECENSY": "0.15"}
+    with pytest.raises(ConfigError, match="WEIGHT_RECENCY"):
+        load_config(CONFIG, env=env)
 
 
 @pytest.mark.parametrize("value", ["lots", "", "0.4.0", "nan", "inf", "-0.1"])
 def test_invalid_weight_values_are_rejected(value):
-    with pytest.raises(ConfigError, match="WEIGHT_SIZE must be a number"):
-        load_config(CONFIG, env={"WEIGHT_SIZE": value})
+    with pytest.raises(ConfigError, match=r"weights\.size must be a number"):
+        load_config(CONFIG, env={**DEFAULT_ENV, "WEIGHT_SIZE": value})
 
 
-def test_unknown_weight_variable_is_rejected_to_catch_typos():
-    with pytest.raises(ConfigError, match="unknown weight variable WEIGHT_RECENY.*WEIGHT_RECENCY"):
-        load_config(CONFIG, env={"WEIGHT_RECENY": "0.15"})
+def test_weights_must_add_up_to_one_and_the_error_shows_them():
+    with pytest.raises(ConfigError, match=r"add up to 1, got 1\.1.*industry 0\.5"):
+        load_config(CONFIG, env={**DEFAULT_ENV, "WEIGHT_INDUSTRY": "0.5"})
 
 
-def test_unrelated_env_variables_are_ignored():
-    assert load_config(CONFIG, env={"PATH": "/bin", "WEIGHTS": "x", "LLM_API_KEY": "k"})["weights"] == DEFAULTS
+def test_literal_numbers_in_yaml_still_work(tmp_path):
+    text = CONFIG.read_text()
+    for name, value in DEFAULT_ENV.items():
+        text = text.replace("${" + name + "}", value)
+    path = tmp_path / "config.yaml"
+    path.write_text(text)
+    assert load_config(path, env={})["weights"]["industry"] == 0.4
 
 
-def test_zero_weight_is_allowed():
-    env = {"WEIGHT_RECENCY": "0", "WEIGHT_INDUSTRY": "0.55"}
-    assert load_config(CONFIG, env=env)["weights"]["recency"] == 0
+def test_placeholders_work_for_other_settings_too(tmp_path):
+    text = CONFIG.read_text().replace('reference_date: "2024-01-21"', 'reference_date: "${REF_DATE}"')
+    path = tmp_path / "config.yaml"
+    path.write_text(text)
+    assert load_config(path, env={**DEFAULT_ENV, "REF_DATE": "2024-02-01"})["reference_date"] == "2024-02-01"
 
 
 # --- load_env ------------------------------------------------------------------------------
 
 def test_load_env_reads_the_file(clean_env, tmp_path):
-    path = tmp_path / ".env"
-    path.write_text("WEIGHT_SIZE=0.30\n# comment\nOTHER=1\n")
+    path = write_env(tmp_path, WEIGHT_SIZE="0.30", OTHER="1")
     env = load_env(path)
     assert env["WEIGHT_SIZE"] == "0.30" and env["OTHER"] == "1"
 
 
 def test_real_environment_variable_beats_the_file(tmp_path, monkeypatch):
-    path = tmp_path / ".env"
-    path.write_text("WEIGHT_SIZE=0.30\n")
+    path = write_env(tmp_path, WEIGHT_SIZE="0.30")
     monkeypatch.setenv("WEIGHT_SIZE", "0.25")
     assert load_env(path)["WEIGHT_SIZE"] == "0.25"
 
 
 def test_load_env_does_not_modify_the_process_environment(tmp_path, monkeypatch):
     monkeypatch.delenv("ONLY_IN_FILE", raising=False)
-    path = tmp_path / ".env"
-    path.write_text("ONLY_IN_FILE=1\n")
+    path = write_env(tmp_path, ONLY_IN_FILE="1")
     assert load_env(path)["ONLY_IN_FILE"] == "1"
-    import os
     assert "ONLY_IN_FILE" not in os.environ
 
 
-def test_missing_default_env_file_is_fine(clean_env, tmp_path, monkeypatch):
+def test_missing_default_env_file_is_not_an_error_by_itself(clean_env, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     assert isinstance(load_env(), dict)
 
@@ -107,45 +130,45 @@ def test_missing_explicit_env_file_raises(tmp_path):
 
 # --- command line --------------------------------------------------------------------------
 
-def test_cli_prints_default_weights(clean_env, tmp_path, capsys):
-    env_file = tmp_path / ".env"
-    env_file.write_text("")
-    assert main(["--input", str(DATA), "--env-file", str(env_file)]) == 0
-    out = capsys.readouterr().out
-    assert "weights: industry 0.4, size 0.25, source 0.2, recency 0.15" in out
-    assert "(env)" not in out
+def test_repo_env_file_provides_every_weight():
+    from dotenv import dotenv_values
+
+    values = dotenv_values(ROOT / ".env")
+    assert {name: values.get(name) for name in WEIGHT_VARS} == DEFAULT_ENV
 
 
-def test_cli_applies_env_file_and_marks_overrides(clean_env, tmp_path, capsys):
-    env_file = tmp_path / ".env"
-    env_file.write_text("WEIGHT_INDUSTRY=0.30\nWEIGHT_SIZE=0.35\n")
-    assert main(["--input", str(DATA), "--env-file", str(env_file)]) == 0
-    assert "weights: industry 0.3 (env), size 0.35 (env), source 0.2, recency 0.15" in capsys.readouterr().out
+def test_cli_prints_the_weights_from_the_env_file(clean_env, tmp_path, capsys):
+    path = write_env(tmp_path, **{**DEFAULT_ENV, "WEIGHT_INDUSTRY": "0.30", "WEIGHT_SIZE": "0.35"})
+    assert main(["--input", str(DATA), "--env-file", str(path)]) == 0
+    assert "weights: industry 0.3, size 0.35, source 0.2, recency 0.15" in capsys.readouterr().out
 
 
 def test_cli_real_env_variable_beats_env_file(clean_env, tmp_path, monkeypatch, capsys):
-    env_file = tmp_path / ".env"
-    env_file.write_text("WEIGHT_INDUSTRY=0.30\nWEIGHT_SIZE=0.35\n")
+    path = write_env(tmp_path, **{**DEFAULT_ENV, "WEIGHT_INDUSTRY": "0.30", "WEIGHT_SIZE": "0.35"})
     monkeypatch.setenv("WEIGHT_INDUSTRY", "0.40")
     monkeypatch.setenv("WEIGHT_SIZE", "0.25")
-    assert main(["--input", str(DATA), "--env-file", str(env_file)]) == 0
-    assert "weights: industry 0.4 (env), size 0.25 (env)" in capsys.readouterr().out
+    assert main(["--input", str(DATA), "--env-file", str(path)]) == 0
+    assert "weights: industry 0.4, size 0.25, source 0.2, recency 0.15" in capsys.readouterr().out
 
 
 def test_cli_fails_when_weights_do_not_add_up(clean_env, tmp_path, capsys):
-    env_file = tmp_path / ".env"
-    env_file.write_text("WEIGHT_INDUSTRY=0.90\n")
-    assert main(["--input", str(DATA), "--env-file", str(env_file)]) == 1
+    path = write_env(tmp_path, **{**DEFAULT_ENV, "WEIGHT_INDUSTRY": "0.90"})
+    assert main(["--input", str(DATA), "--env-file", str(path)]) == 1
     assert "add up to 1" in capsys.readouterr().err
+
+
+def test_cli_fails_when_a_weight_is_missing(clean_env, tmp_path, capsys):
+    path = write_env(tmp_path, WEIGHT_INDUSTRY="0.4", WEIGHT_SIZE="0.25", WEIGHT_SOURCE="0.2")
+    assert main(["--input", str(DATA), "--env-file", str(path)]) == 1
+    assert "add WEIGHT_RECENCY to .env" in capsys.readouterr().err
+
+
+def test_cli_fails_without_any_env_file_or_variables(clean_env, tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)  # no .env here
+    assert main(["--input", str(DATA), "--config", str(CONFIG)]) == 1
+    assert "WEIGHT_INDUSTRY" in capsys.readouterr().err
 
 
 def test_cli_fails_on_missing_explicit_env_file(clean_env, tmp_path, capsys):
     assert main(["--input", str(DATA), "--env-file", str(tmp_path / "missing.env")]) == 1
     assert "env file not found" in capsys.readouterr().err
-
-
-def test_cli_fails_on_misspelled_weight_variable(clean_env, tmp_path, capsys):
-    env_file = tmp_path / ".env"
-    env_file.write_text("WEIGHT_RECENSY=0.15\n")
-    assert main(["--input", str(DATA), "--env-file", str(env_file)]) == 1
-    assert "unknown weight variable WEIGHT_RECENSY" in capsys.readouterr().err

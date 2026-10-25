@@ -3,8 +3,8 @@
 Usage:
     python main.py --input data/leads_full_scale_100.csv [--strict] [--reference-date YYYY-MM-DD]
 
-Weights come from config.yaml and can be overridden with WEIGHT_INDUSTRY, WEIGHT_SIZE,
-WEIGHT_SOURCE and WEIGHT_RECENCY in the environment or a .env file.
+Scoring weights are read from .env (WEIGHT_INDUSTRY, WEIGHT_SIZE, WEIGHT_SOURCE and
+WEIGHT_RECENCY, referenced from config.yaml); they must add up to 1.
 
 Currently runs Stage 1 (ingestion) and Stage 2 (rule scoring). Exits with status 1 and a
 message on stderr if the file or config cannot be used.
@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", default="config.yaml", help="path to config.yaml (default: config.yaml)")
     parser.add_argument(
         "--env-file",
-        help="path to a .env file with WEIGHT_* overrides (default: .env if it exists)",
+        help="path to the .env file holding the weights (default: .env)",
     )
     parser.add_argument(
         "--reference-date",
@@ -73,10 +73,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
-    overridden = set(config["weights_overridden"])
-    weights = ", ".join(
-        f"{name} {value:g}" + (" (env)" if name in overridden else "") for name, value in config["weights"].items()
-    )
+    weights = ", ".join(f"{name} {value:g}" for name, value in config["weights"].items())
     flagged = sum(1 for lead in result.leads if lead.flags)
     noted = sum(1 for lead in result.leads if lead.notes)
     print(f"Ingested {args.input} (reference date {reference_date})")

@@ -24,9 +24,17 @@ ROOT = Path(__file__).resolve().parent.parent
 REFERENCE = date(2024, 1, 21)
 
 
+WEIGHT_ENV = {
+    "WEIGHT_INDUSTRY": "0.40",
+    "WEIGHT_SIZE": "0.25",
+    "WEIGHT_SOURCE": "0.20",
+    "WEIGHT_RECENCY": "0.15",
+}
+
+
 @pytest.fixture(scope="module")
 def config():
-    return load_config(ROOT / "config.yaml")
+    return load_config(ROOT / "config.yaml", env=WEIGHT_ENV)
 
 
 @pytest.fixture(scope="module")
@@ -221,12 +229,9 @@ def test_size_band_gap_raises_at_scoring_time():
 
 # --- config validation ---------------------------------------------------------------------
 
-def test_weights_must_add_up_to_one(tmp_path):
-    text = (ROOT / "config.yaml").read_text().replace("industry: 0.40", "industry: 0.50")
-    path = tmp_path / "config.yaml"
-    path.write_text(text)
+def test_weights_must_add_up_to_one():
     with pytest.raises(ConfigError, match="add up to 1"):
-        load_config(path, env={})
+        load_config(ROOT / "config.yaml", env={**WEIGHT_ENV, "WEIGHT_INDUSTRY": "0.50"})
 
 
 def test_config_requires_rules(tmp_path):

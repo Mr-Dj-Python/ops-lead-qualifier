@@ -1,4 +1,4 @@
-"""Load config.yaml, apply WEIGHT_* environment overrides, and parse dates used by the CLI."""
+"""Load config.yaml (filling ${NAME} placeholders from .env) and parse dates used by the CLI."""
 from __future__ import annotations
 
 import math
@@ -11,7 +11,7 @@ from typing import Mapping
 import yaml
 from dotenv import dotenv_values
 
-WEIGHT_PREFIX = "WEIGHT_"
+_PLACEHOLDER = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 
 class ConfigError(Exception):
@@ -44,34 +44,46 @@ def load_env(env_file: str | Path | None = None, required: bool = False) -> dict
     return {**from_file, **os.environ}
 
 
-def _apply_weight_overrides(weights: dict, env: Mapping[str, str]) -> list[str]:
-    """Replace weights with WEIGHT_<FACTOR> values from env; return the factors overridden."""
-    factors = {name.upper(): name for name in weights}
-    overridden = []
-    for key, raw in env.items():
-        if not key.startswith(WEIGHT_PREFIX):
-            continue
-        factor = factors.get(key[len(WEIGHT_PREFIX):].upper())
-        if factor is None:
-            expected = ", ".join(f"{WEIGHT_PREFIX}{name}" for name in factors)
-            raise ConfigError(f"unknown weight variable {key}; expected one of: {expected}")
+def _expand(value, env: Mapping[str, str], where: str):
+    """Replace ${NAME} in every string of the loaded YAML with the value of NAME from env."""
+    if isinstance(value, str):
+
+        def replace(match: re.Match) -> str:
+            name = match.group(1)
+            if name not in env:
+                raise ConfigError(f"config {where} refers to ${{{name}}}, which is not set; add {name} to .env")
+            return env[name]
+
+        return _PLACEHOLDER.sub(replace, value)
+    if isinstance(value, dict):
+        return {key: _expand(item, env, f"{where}.{key}" if where else str(key)) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_expand(item, env, f"{where}[{index}]") for index, item in enumerate(value)]
+    return value
+
+
+def _parse_weights(weights) -> dict[str, float]:
+    if not isinstance(weights, dict) or not weights:
+        raise ConfigError("config 'weights' must map each factor to a number of 0 or more")
+    parsed = {}
+    for name, raw in weights.items():
         try:
-            value = float(raw.strip())
-        except ValueError:
-            raise ConfigError(f"{key} must be a number, got {raw!r}") from None
+            if isinstance(raw, bool):
+                raise ValueError
+            value = float(raw.strip()) if isinstance(raw, str) else float(raw)
+        except (TypeError, ValueError):
+            raise ConfigError(f"config weights.{name} must be a number, got {raw!r}") from None
         if not math.isfinite(value) or value < 0:
-            raise ConfigError(f"{key} must be a number of 0 or more, got {raw!r}")
-        weights[factor] = value
-        overridden.append(factor)
-    return overridden
+            raise ConfigError(f"config weights.{name} must be a number of 0 or more, got {raw!r}")
+        parsed[name] = value
+    return parsed
 
 
 def load_config(path: str | Path, env: Mapping[str, str] | None = None) -> dict:
     """Read and validate config.yaml.
 
-    Weights in the file are defaults; WEIGHT_INDUSTRY, WEIGHT_SIZE, WEIGHT_SOURCE and
-    WEIGHT_RECENCY in `env` (default: os.environ) override them. The result's
-    `weights_overridden` lists the factors taken from the environment.
+    Any `${NAME}` in the file is replaced by NAME from `env` (default: os.environ). The
+    weights are written that way, so their values live in .env.
     """
     path = Path(path)
     if not path.is_file():
@@ -84,19 +96,13 @@ def load_config(path: str | Path, env: Mapping[str, str] | None = None) -> dict:
     if not isinstance(config, dict):
         raise ConfigError(f"config {path} must contain a mapping at the top level")
 
+    config = _expand(config, os.environ if env is None else env, "")
+
     missing_values = config.get("missing_values")
     if not isinstance(missing_values, list) or not all(isinstance(v, str) for v in missing_values):
         raise ConfigError("config 'missing_values' must be a list of strings")
 
-    weights = config.get("weights")
-    if (
-        not isinstance(weights, dict)
-        or not weights
-        or not all(isinstance(w, (int, float)) and not isinstance(w, bool) and w >= 0 for w in weights.values())
-    ):
-        raise ConfigError("config 'weights' must map each factor to a number of 0 or more")
-    weights = dict(weights)
-    config["weights_overridden"] = _apply_weight_overrides(weights, os.environ if env is None else env)
+    weights = _parse_weights(config.get("weights"))
     if abs(sum(weights.values()) - 1) > 1e-6:
         raise ConfigError(
             f"weights must add up to 1, got {sum(weights.values()):g} "

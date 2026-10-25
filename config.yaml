@@ -6,13 +6,13 @@
 reference_date: "2024-01-21"
 
 # Share of the final score for each factor; must add up to 1. Industry fit is scored by the LLM,
-# the other three by the rules below. These are defaults: set WEIGHT_INDUSTRY, WEIGHT_SIZE,
-# WEIGHT_SOURCE or WEIGHT_RECENCY in the environment or in .env (see .env.example) to override.
+# the other three by the rules below. The values live in .env: ${NAME} is replaced by NAME
+# from the .env file (a real environment variable of the same name takes priority).
 weights:
-  industry: 0.40
-  size: 0.25
-  source: 0.20
-  recency: 0.15
+  industry: ${WEIGHT_INDUSTRY}
+  size: ${WEIGHT_SIZE}
+  source: ${WEIGHT_SOURCE}
+  recency: ${WEIGHT_RECENCY}
 
 # Rule-based scoring (pipeline/rules.py). Each key names a registered rule; scores are 1-10.
 rules:
