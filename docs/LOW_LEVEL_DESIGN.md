@@ -359,7 +359,7 @@ tiers:
   hard:    {score_range: [4, 6],  industries: [Construction, Energy, Agriculture, Healthcare, Environmental, Consumer]}
   none:    {score_range: [1, 3]}
   unknown: {score_range: [5, 5]}
-weights: {industry: 0.40, size: 0.25, source: 0.20, recency: 0.15}
+weights: {industry: 0.40, size: 0.25, source: 0.20, recency: 0.15}   # defaults; WEIGHT_<FACTOR> env vars or .env override them, must sum to 1
 thresholds: {qualified: 7.0, review: 5.0}
 priority: {high: 8.5, medium: 7.0}
 caps: {stale_days: 180, hard_reject_size_below: 10, hard_reject_size_above: 5000}

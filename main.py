@@ -3,6 +3,9 @@
 Usage:
     python main.py --input data/leads_full_scale_100.csv [--strict] [--reference-date YYYY-MM-DD]
 
+Weights come from config.yaml and can be overridden with WEIGHT_INDUSTRY, WEIGHT_SIZE,
+WEIGHT_SOURCE and WEIGHT_RECENCY in the environment or a .env file.
+
 Currently runs Stage 1 (ingestion) and Stage 2 (rule scoring). Exits with status 1 and a
 message on stderr if the file or config cannot be used.
 """
@@ -12,7 +15,7 @@ import argparse
 import sys
 from datetime import date
 
-from pipeline.config import ConfigError, load_config, parse_iso_date
+from pipeline.config import ConfigError, load_config, load_env, parse_iso_date
 from pipeline.ingest import IngestError, ingest_csv
 from pipeline.rules import RuleFactory, score_leads
 
@@ -21,6 +24,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Qualify inbound leads from a CSV file.")
     parser.add_argument("--input", required=True, help="path to the leads CSV file")
     parser.add_argument("--config", default="config.yaml", help="path to config.yaml (default: config.yaml)")
+    parser.add_argument(
+        "--env-file",
+        help="path to a .env file with WEIGHT_* overrides (default: .env if it exists)",
+    )
     parser.add_argument(
         "--reference-date",
         help="date recency is measured from, YYYY-MM-DD (default: config value, else today)",
@@ -51,7 +58,8 @@ def resolve_reference_date(cli_value: str | None, config: dict) -> date:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
-        config = load_config(args.config)
+        env = load_env(args.env_file, required=args.env_file is not None)
+        config = load_config(args.config, env=env)
         reference_date = resolve_reference_date(args.reference_date, config)
         result = ingest_csv(
             args.input,
@@ -65,9 +73,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
+    overridden = set(config["weights_overridden"])
+    weights = ", ".join(
+        f"{name} {value:g}" + (" (env)" if name in overridden else "") for name, value in config["weights"].items()
+    )
     flagged = sum(1 for lead in result.leads if lead.flags)
     noted = sum(1 for lead in result.leads if lead.notes)
     print(f"Ingested {args.input} (reference date {reference_date})")
+    print(f"  weights: {weights}")
     print(f"  rows read:                  {result.rows_read}")
     print(f"  leads kept:                 {len(result.leads)}")
     print(f"  rows dropped:               {len(result.errors)}")

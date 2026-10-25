@@ -190,7 +190,7 @@ All bands live in `config.yaml`, not in code.
   - Still failing: mark the lead `review` with reason "LLM scoring failed"; the run continues.
 
 ### Stage 4: Decision and ranking (code)
-- `final_score = 0.40*industry + 0.25*size + 0.20*source + 0.15*recency` (range 1-10).
+- `final_score = 0.40*industry + 0.25*size + 0.20*source + 0.15*recency` (range 1-10). These are the defaults in `config.yaml`; set `WEIGHT_INDUSTRY`, `WEIGHT_SIZE`, `WEIGHT_SOURCE` or `WEIGHT_RECENCY` in the environment or a `.env` file (see `.env.example`) to change them without editing code. A real environment variable beats `.env`, which beats `config.yaml`. The weights must add up to 1 and unknown `WEIGHT_*` names are rejected, otherwise the run stops with an error.
 - Thresholds (tune on the test data):
   - `>= 7.0` qualified
   - `5.0 - 6.9` review

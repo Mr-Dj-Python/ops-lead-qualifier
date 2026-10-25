@@ -226,14 +226,14 @@ def test_weights_must_add_up_to_one(tmp_path):
     path = tmp_path / "config.yaml"
     path.write_text(text)
     with pytest.raises(ConfigError, match="add up to 1"):
-        load_config(path)
+        load_config(path, env={})
 
 
 def test_config_requires_rules(tmp_path):
     path = tmp_path / "config.yaml"
     path.write_text('weights: {industry: 1}\nmissing_values: ["na"]\n')
     with pytest.raises(ConfigError, match="'rules'"):
-        load_config(path)
+        load_config(path, env={})
 
 
 # --- whole data files ----------------------------------------------------------------------

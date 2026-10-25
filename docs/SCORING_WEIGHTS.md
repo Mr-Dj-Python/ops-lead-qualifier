@@ -141,4 +141,4 @@ Report date: 21 Jan 2024.
 5. Is the **7.0 / 5.0** cutoff right for how many leads the team can contact (current capacity: about 60 a month)?
 6. Is a **14-day** window the right definition of "fresh" engagement?
 
-*Any change agreed here is a one-line edit in the system's settings file; no code changes are needed.*
+*Any change agreed here is a one-line edit in the system's settings file; no code changes are needed. The four weights can also be changed without touching that file, by setting `WEIGHT_INDUSTRY`, `WEIGHT_SIZE`, `WEIGHT_SOURCE` and `WEIGHT_RECENCY` in a `.env` file; they must still add up to 1.*
