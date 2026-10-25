@@ -89,7 +89,12 @@ def _read_rows(path: Path) -> tuple[list[str], list[tuple[int, list[str]]]]:
         raise IngestError(f"input file not found: {path}")
     if not path.is_file():
         raise IngestError(f"input path is not a file: {path}")
+    if path.suffix.lower() != ".csv":
+        raise IngestError(f"input file must be a .csv file, got {path.suffix or 'no extension'!r}: {path}")
     try:
+        with path.open("rb") as raw:
+            if b"\x00" in raw.read(8192):
+                raise IngestError(f"input file looks binary, not a CSV text file: {path}")
         with path.open(newline="", encoding="utf-8-sig") as handle:
             reader = csv.reader(handle, strict=True)
             header = next(reader, None)

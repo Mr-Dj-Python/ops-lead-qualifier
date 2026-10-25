@@ -34,6 +34,25 @@ def test_directory_raises(tmp_path):
         ingest(tmp_path)
 
 
+@pytest.mark.parametrize("name", ["leads.txt", "leads.xlsx", "leads.json", "leads"])
+def test_non_csv_extension_raises_even_with_csv_content(tmp_path, name):
+    path = write_csv(tmp_path, "Ann,Co,10,SaaS,Referral,2024-01-01\n", name=name)
+    with pytest.raises(IngestError, match="must be a .csv file"):
+        ingest(path)
+
+
+def test_uppercase_csv_extension_is_accepted(tmp_path):
+    path = write_csv(tmp_path, "Ann,Co,10,SaaS,Referral,2024-01-01\n", name="LEADS.CSV")
+    assert len(ingest(path).leads) == 1
+
+
+def test_binary_file_with_csv_extension_raises(tmp_path):
+    path = tmp_path / "fake.csv"
+    path.write_bytes(b"PK\x03\x04\x00\x00\x08\x00" + bytes(range(256)))
+    with pytest.raises(IngestError, match="binary"):
+        ingest(path)
+
+
 def test_empty_file_raises(tmp_path):
     path = tmp_path / "empty.csv"
     path.write_text("")
@@ -191,6 +210,12 @@ def test_cli_success_exit_code(capsys):
 def test_cli_error_exit_code_and_message(capsys):
     assert main(["--input", "does-not-exist.csv"]) == 1
     assert "error: input file not found" in capsys.readouterr().err
+
+
+def test_cli_rejects_non_csv_file(tmp_path, capsys):
+    path = write_csv(tmp_path, "Ann,Co,10,SaaS,Referral,2024-01-01\n", name="leads.txt")
+    assert main(["--input", str(path)]) == 1
+    assert "must be a .csv file" in capsys.readouterr().err
 
 
 def test_cli_strict_flag_fails_on_problem(tmp_path, capsys):
