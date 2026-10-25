@@ -1,0 +1,17 @@
+# Settings for the lead qualifier. Only the keys used so far are present;
+# see docs/LOW_LEVEL_DESIGN.md section 7 for the full planned layout.
+
+# Used by the recency factor and to reject future dates (the sample data ends in Jan 2024).
+# Leave unset to default to today.
+reference_date: "2024-01-21"
+
+# Values (trimmed, case-insensitive) that mean "no data" and are converted to null.
+# Keep them quoted: an unquoted null is read by YAML as an empty value, not text.
+missing_values:
+  - "na"
+  - "n/a"
+  - "null"
+  - "none"
+  - "unknown"
+  - "unknown source"
+  - "unknown sector"
