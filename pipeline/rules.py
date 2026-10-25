@@ -9,22 +9,14 @@ from __future__ import annotations
 
 import re
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import date
 
 from pipeline.config import ConfigError
-from pipeline.ingest import Lead
+from pipeline.models import Lead, RuleResult
 
 
 class RuleConfigError(ConfigError):
     """Raised when a rule's settings are missing or invalid."""
-
-
-@dataclass(frozen=True)
-class RuleResult:
-    rule: str
-    score: int  # 1-10
-    detail: str  # short reason, reused in the per-lead explanation
 
 
 class RuleScorer(ABC):
@@ -130,11 +122,12 @@ class SizeRule(RuleScorer):
     def score(self, lead: Lead, reference_date: date) -> RuleResult:
         size = lead.company_size
         if size is None:
-            return RuleResult(self.name, self.missing_score, "company size not provided (scored neutral)")
+            detail = "company size not provided (scored neutral)"
+            return RuleResult(rule=self.name, score=self.missing_score, detail=detail)
         for low, high, score, label in self.bands:
             if (low is None or size >= low) and (high is None or size <= high):
                 detail = f"{size} employees" + (f", {label}" if label else "")
-                return RuleResult(self.name, score, detail)
+                return RuleResult(rule=self.name, score=score, detail=detail)
         raise RuleConfigError(f"rule 'size': no band covers {size} employees")
 
 
@@ -158,11 +151,12 @@ class SourceRule(RuleScorer):
 
     def score(self, lead: Lead, reference_date: date) -> RuleResult:
         if lead.source is None:
-            return RuleResult(self.name, self.unknown_score, "source not provided (default score)")
+            return RuleResult(rule=self.name, score=self.unknown_score, detail="source not provided (default score)")
         score = self.scores.get(self._normalize(lead.source))
         if score is None:
-            return RuleResult(self.name, self.unknown_score, f"source {lead.source!r} not recognized (default score)")
-        return RuleResult(self.name, score, lead.source)
+            detail = f"source {lead.source!r} not recognized (default score)"
+            return RuleResult(rule=self.name, score=self.unknown_score, detail=detail)
+        return RuleResult(rule=self.name, score=score, detail=lead.source)
 
 
 @register_rule("recency")
@@ -192,12 +186,12 @@ class RecencyRule(RuleScorer):
 
     def score(self, lead: Lead, reference_date: date) -> RuleResult:
         if lead.last_interaction_date is None:
-            return RuleResult(self.name, self.missing_score, "last interaction date not provided")
+            return RuleResult(rule=self.name, score=self.missing_score, detail="last interaction date not provided")
         days = max((reference_date - lead.last_interaction_date).days, 0)
         for max_days, score in self.bands:
             if days <= max_days:
-                return RuleResult(self.name, score, f"{days} days since contact")
-        return RuleResult(self.name, self.older_score, f"{days} days since contact")
+                return RuleResult(rule=self.name, score=score, detail=f"{days} days since contact")
+        return RuleResult(rule=self.name, score=self.older_score, detail=f"{days} days since contact")
 
 
 # --- running the rules ---------------------------------------------------------------------

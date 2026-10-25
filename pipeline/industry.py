@@ -15,36 +15,20 @@ import logging
 import os
 import re
 import tempfile
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 
+from pydantic import BaseModel, ValidationError
+
 from pipeline.config import ConfigError
-from pipeline.ingest import Lead
 from pipeline.llm_client import LLMAPIClient, LLMAuthError, LLMError
+from pipeline.models import IndustryItem, IndustryResponse, IndustryResult, Lead, LeadPayload
 from pipeline.prompts import TIER_ORDER, build_industry_system_prompt, build_industry_user_prompt
 
 log = logging.getLogger(__name__)
 
-CONFIDENCES = ("high", "medium", "low")
-MAX_COMPANY_CHARS = 100
-MAX_REASON_CHARS = 200
 FAILED_REASON = "LLM scoring failed"
 TOKENS_PER_LEAD = 80  # reply budget per lead; keeps a large batch from being cut off mid-JSON
-
-
-@dataclass(frozen=True)
-class IndustryResult:
-    lead_id: str
-    tier: str  # best | hard | none | unknown
-    industry_fit: int  # 1-10, inside the tier's score range
-    confidence: str  # high | medium | low
-    reason: str
-    llm_failed: bool = False
-
-    @property
-    def caps_at_review(self) -> bool:
-        """Stage 4 may not qualify a lead whose industry is unknown, low confidence or failed."""
-        return self.tier == "unknown" or self.confidence == "low" or self.llm_failed
 
 
 @dataclass
@@ -126,6 +110,13 @@ def cache_key(lead: Lead) -> str:
     return "|".join(re.sub(r"\s+", " ", part).strip().lower() for part in parts)
 
 
+class CacheFile(BaseModel):
+    """The on-disk shape of the cache; anything else is treated as no cache."""
+
+    fingerprint: str
+    entries: dict[str, dict]
+
+
 class IndustryCache:
     """JSON file of earlier answers. It is discarded when the model or prompt changes."""
 
@@ -140,32 +131,29 @@ class IndustryCache:
 
     def _load(self) -> None:
         try:
-            data = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
+            data = CacheFile.model_validate_json(self.path.read_text(encoding="utf-8"))
+        except (OSError, ValidationError):
             return  # no cache yet, or an unreadable one: start empty
-        if isinstance(data, dict) and data.get("fingerprint") == self.fingerprint and isinstance(data.get("entries"), dict):
-            self._entries = data["entries"]
+        if data.fingerprint == self.fingerprint:
+            self._entries = data.entries
 
     def get(self, key: str, lead_id: str, ranges: dict[str, tuple[int, int]]) -> IndustryResult | None:
         entry = self._entries.get(key) if self.enabled else None
-        if not isinstance(entry, dict):
+        if entry is None:
             return None
         result, _ = _validate_item({**entry, "lead_id": lead_id}, ranges)
         return result  # a damaged entry fails validation and is simply asked again
 
     def put(self, key: str, result: IndustryResult) -> None:
         if self.enabled and not result.llm_failed:
-            entry = asdict(result)
-            for name in ("lead_id", "llm_failed"):
-                entry.pop(name)
-            self._entries[key] = entry
+            self._entries[key] = result.model_dump(exclude={"lead_id", "llm_failed"})
             self._dirty = True
 
     def save(self) -> None:
         if not (self.enabled and self._dirty):
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        payload = json.dumps({"fingerprint": self.fingerprint, "entries": self._entries}, indent=1, sort_keys=True)
+        payload = json.dumps(CacheFile(fingerprint=self.fingerprint, entries=self._entries).model_dump(), indent=1, sort_keys=True)
         handle, temp_name = tempfile.mkstemp(dir=self.path.parent, suffix=".tmp")
         try:
             with os.fdopen(handle, "w", encoding="utf-8") as temp:
@@ -203,39 +191,31 @@ def _whole_number(value) -> int | None:
     return None
 
 
-def _whole_score(value) -> int | None:
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float) and value.is_integer():
-        return int(value)
-    return None
-
-
 def _validate_item(
     item, ranges: dict[str, tuple[int, int]]
 ) -> tuple[IndustryResult | None, IndustryResult | None]:
-    """Return (valid result, None), or (None, clamped result) when only the score is out of
-    range for a valid tier, or (None, None) when the item is unusable."""
-    if not isinstance(item, dict) or not isinstance(item.get("lead_id"), str):
+    """Check one answer with the IndustryItem model.
+
+    Returns (result, None) when valid; (None, clamped result) when only the score is outside
+    its tier's range; (None, None) when the item is unusable.
+    """
+    try:
+        valid = IndustryItem.model_validate(item, context={"ranges": ranges})
+    except ValidationError as exc:
+        errors = exc.errors()
+        if all(error["type"] == "score_out_of_range" for error in errors):
+            unranged = IndustryItem.model_validate(item)  # the same item, minus the range check
+            low, high = ranges[unranged.tier]
+            clamped = unranged.model_copy(update={"industry_fit": min(max(unranged.industry_fit, low), high)})
+            return None, IndustryResult(**clamped.model_dump())
         return None, None
-    tier, confidence, reason = item.get("tier"), item.get("confidence"), item.get("reason")
-    score = _whole_score(item.get("industry_fit"))
-    if tier not in ranges or confidence not in CONFIDENCES or score is None:
-        return None, None
-    if not isinstance(reason, str) or not reason.strip():
-        return None, None
-    reason = reason.strip()[:MAX_REASON_CHARS]
-    low, high = ranges[tier]
-    if low <= score <= high:
-        return IndustryResult(item["lead_id"], tier, score, confidence, reason), None
-    clamped = IndustryResult(item["lead_id"], tier, min(max(score, low), high), confidence, reason)
-    return None, clamped
+    return IndustryResult(**valid.model_dump()), None
 
 
 def _fallback(lead_id: str) -> IndustryResult:
-    return IndustryResult(lead_id, "unknown", 5, "low", FAILED_REASON, llm_failed=True)
+    return IndustryResult(
+        lead_id=lead_id, tier="unknown", industry_fit=5, confidence="low", reason=FAILED_REASON, llm_failed=True
+    )
 
 
 # --- the scorer ------------------------------------------------------------------------------
@@ -255,7 +235,7 @@ class IndustryScorer:
 
         scoring = IndustryScoring(results={})
         by_group: dict[str, IndustryResult] = {}
-        requests: dict[str, dict] = {}  # representative lead_id -> payload
+        requests: dict[str, LeadPayload] = {}  # representative lead_id -> what the model is told
         owner: dict[str, str] = {}  # representative lead_id -> group key
         for key, members in groups.items():
             representative = members[0]
@@ -264,7 +244,7 @@ class IndustryScorer:
                 by_group[key] = cached
                 scoring.cache_hits += len(members)
                 continue
-            requests[representative.lead_id] = _payload(representative)
+            requests[representative.lead_id] = LeadPayload.from_lead(representative)
             owner[representative.lead_id] = key
 
         # Sorted by lead_id so row order never changes which leads share a batch.
@@ -282,16 +262,13 @@ class IndustryScorer:
         for key, members in groups.items():
             template = by_group[key]
             for lead in members:
-                result = IndustryResult(
-                    lead.lead_id, template.tier, template.industry_fit, template.confidence,
-                    template.reason, template.llm_failed,
-                )
+                result = template.model_copy(update={"lead_id": lead.lead_id})
                 scoring.results[lead.lead_id] = result
                 if result.llm_failed:
                     scoring.failed_ids.append(lead.lead_id)
         return scoring
 
-    def _score_batch(self, batch: dict[str, dict], scoring: IndustryScoring) -> dict[str, IndustryResult]:
+    def _score_batch(self, batch: dict[str, LeadPayload], scoring: IndustryScoring) -> dict[str, IndustryResult]:
         settings = self.settings
         good: dict[str, IndustryResult] = {}
         clamped: dict[str, IndustryResult] = {}
@@ -300,7 +277,7 @@ class IndustryScorer:
         for attempt in range(1 + settings.validation_retries):
             if not pending:
                 break
-            user_prompt = build_industry_user_prompt(list(pending.values()), repair=repair)
+            user_prompt = build_industry_user_prompt([p.model_dump() for p in pending.values()], repair=repair)
             scoring.api_calls += 1
             try:
                 raw = self.client.complete(
@@ -314,13 +291,10 @@ class IndustryScorer:
                 log.warning("LLM call failed for %d lead(s) after retries: %s", len(pending), exc)
                 break  # transport retries are already used up; fall back for what is left
             try:
-                data = _extract_json(raw)
-                items = data.get("results") if isinstance(data, dict) else data
-                if not isinstance(items, list):
-                    raise ValueError("reply has no 'results' list")
+                items = IndustryResponse.model_validate(_extract_json(raw)).results
                 repair = False
-            except ValueError as exc:
-                log.warning("LLM reply was not usable JSON (%s); retrying %d lead(s)", exc, len(pending))
+            except (ValueError, ValidationError) as exc:  # not JSON, or no "results" list
+                log.warning("LLM reply was not usable (%s); retrying %d lead(s)", str(exc).splitlines()[0], len(pending))
                 repair = True
                 continue
             for item in items:
@@ -344,13 +318,3 @@ class IndustryScorer:
                 log.warning("industry scoring failed for %s; falling back to review", lead_id)
                 good[lead_id] = _fallback(lead_id)
         return good
-
-
-def _payload(lead: Lead) -> dict:
-    """Only company, industry and size go to the model (docs/LOW_LEVEL_DESIGN.md 2.3)."""
-    return {
-        "lead_id": lead.lead_id,
-        "company": (lead.company or "(missing)")[:MAX_COMPANY_CHARS],
-        "industry": lead.industry or "(missing)",
-        "company_size": lead.company_size,
-    }

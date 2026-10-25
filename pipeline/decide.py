@@ -12,9 +12,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from pipeline.config import ConfigError
-from pipeline.industry import IndustryResult
-from pipeline.ingest import Lead
-from pipeline.rules import RuleResult
+from pipeline.models import IndustryResult, Lead, LeadDecision, RuleResult
 
 INDUSTRY = "industry"
 QUALIFIED, REVIEW, REJECTED = "qualified", "review", "rejected"
@@ -73,28 +71,6 @@ def _count(value, where: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise ConfigError(f"config {where} must be a whole number of 0 or more, got {value!r}")
     return value
-
-
-@dataclass
-class LeadDecision:
-    lead_id: str
-    name: str | None
-    company: str | None
-    industry_label: str | None  # the industry text from the CSV
-    company_size: int | None
-    tier: str
-    confidence: str
-    factor_scores: dict[str, int]
-    factor_points: dict[str, float]  # score x weight; adds up to final_score
-    final_score: float
-    decision: str  # qualified | review | rejected
-    priority: str | None  # HIGH | MEDIUM, qualified leads only
-    overall_rank: int  # 1 = best fit of all leads
-    priority_rank: int | None  # 1 = first qualified lead to contact
-    rules_applied: list[str]
-    rejection_reason: str | None
-    flags: list[str]
-    explanation: str = ""
 
 
 @dataclass
