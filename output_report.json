@@ -1,0 +1,5177 @@
+{
+  "run_info": {
+    "schema_version": 1,
+    "run_id": "20261025T121422Z-cac5e0",
+    "started_at": "2026-10-25T12:14:22.547816Z",
+    "finished_at": "2026-10-25T12:15:20.141292Z",
+    "duration_s": 57.5932,
+    "python": "3.15.0",
+    "git_commit": "da3a2dc",
+    "input": {
+      "path": "data/leads_full_scale_100.csv",
+      "sha256": "99e785213e09a496ed43004871afa7d3297e7229eff599a62f2c953048ffd2f1",
+      "rows_read": 100,
+      "leads_kept": 100,
+      "rows_dropped": 0
+    },
+    "reference_date": "2024-01-21",
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "industry_batch_size": 10,
+    "message_batch_size": 10,
+    "strict": false,
+    "rubric": {
+      "weights": {
+        "industry": 0.4,
+        "size": 0.25,
+        "source": 0.2,
+        "recency": 0.15
+      },
+      "qualified_at": 7.0,
+      "review_at": 5.0,
+      "high_priority_at": 8.5,
+      "stale_days": 180,
+      "reject_size_below": 10,
+      "reject_size_above": 5000,
+      "tier_score_ranges": {
+        "best": [
+          9,
+          10
+        ],
+        "hard": [
+          4,
+          6
+        ],
+        "none": [
+          1,
+          3
+        ],
+        "unknown": [
+          5,
+          5
+        ]
+      }
+    },
+    "fingerprints": {
+      "config_sha256": "b5158e6a44b3fee70e6580052aea38edc0cac06c8ef4f60204f33cf55b3de12f",
+      "industry_prompt_sha256": "81beb36377b82425d2e2b7c8d12f5e8678882f1cc7d50059e7640a84184e36b1",
+      "message_prompt_sha256": "0ea9420f8ff0fdc90002faf11c7f826fb48fd36d0c3bbd311963944e3f376107"
+    },
+    "log_file": "run.log"
+  },
+  "stats": {
+    "total": 100,
+    "processed": 100,
+    "qualified": 21,
+    "review": 59,
+    "rejected": 20,
+    "qualified_pct": 21.0,
+    "review_pct": 59.0,
+    "rejected_pct": 20.0,
+    "average_score": 6.07,
+    "highest_score": 10.0,
+    "lowest_score": 2.55,
+    "average_factor_scores": {
+      "industry": 3.8,
+      "size": 8.5,
+      "source": 6.87,
+      "recency": 7.03
+    },
+    "top_rejection_reasons": [
+      {
+        "reason": "Industry fit",
+        "count": 16
+      },
+      {
+        "reason": "Company size",
+        "count": 2
+      },
+      {
+        "reason": "Company size and Engagement",
+        "count": 1
+      },
+      {
+        "reason": "Engagement",
+        "count": 1
+      }
+    ],
+    "by_industry_tier": {
+      "best": 18,
+      "hard": 13,
+      "none": 68,
+      "unknown": 1
+    },
+    "by_variant": {
+      "warm_followup": 7,
+      "value_led": 7,
+      "reengagement": 7
+    },
+    "messages_written": 21,
+    "messages_failed": 0,
+    "failed_leads": 0,
+    "api_retries": 0,
+    "est_manual_minutes_saved": 999.0
+  },
+  "leads": [
+    {
+      "rank": 1,
+      "lead_id": "L046",
+      "name": "Sophia Moretti",
+      "company": "Wine Distribution",
+      "industry": "Retail",
+      "company_size": 95,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-11",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Retail label and name indicate distribution of physical goods.",
+      "factor_scores": {
+        "industry": 10,
+        "size": 10,
+        "source": 10,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 4.0,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.5
+      },
+      "final_score": 10.0,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 1,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Sophia Moretti, Wine Distribution (95 people, Retail, Inbound demo request, 10 days ago)\nScore: 10/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 10/10 -> 4.00 pts  \"Retail label and name indicate distribution of physical goods.\"\n  Company size (25%): 10/10 -> 2.50 pts  (95 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 10/10 -> 1.50 pts  (10 days since contact)",
+      "message": {
+        "variant": "warm_followup",
+        "subject": "Following up on your demo request",
+        "body": "Hi Sophia,\n\nThanks for your demo request regarding OpsFlow. At Wine Distribution, managing inventory and ensuring timely deliveries can be challenging. Our software aims to simplify these processes for retail businesses.\n\nIf you're interested, I can walk you through a short demo. Would a 15-minute call next week work for you? No worries if the timing isn’t right.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 63
+      },
+      "trace": {
+        "source_row": 47,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L046",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 1
+        }
+      }
+    },
+    {
+      "rank": 2,
+      "lead_id": "L045",
+      "name": "Steven Chen",
+      "company": "Robotics Company",
+      "industry": "Manufacturing",
+      "company_size": 75,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-07",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Manufacturing label and name indicate physical goods operations.",
+      "factor_scores": {
+        "industry": 9,
+        "size": 10,
+        "source": 9,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 3.6,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 1.5
+      },
+      "final_score": 9.4,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 2,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Steven Chen, Robotics Company (75 people, Manufacturing, Referral, 14 days ago)\nScore: 9.4/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 9/10 -> 3.60 pts  \"Manufacturing label and name indicate physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (75 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 10/10 -> 1.50 pts  (14 days since contact)",
+      "message": {
+        "variant": "warm_followup",
+        "subject": "Following up on your referral",
+        "body": "Hi Steven,\n\nThanks for connecting with us through a referral. It’s great to meet someone from Robotics Company. OpsFlow helps manufacturing teams streamline operations, especially around inventory and supply chain visibility.\n\nIf you’re interested, I can walk you through a short demo. Would a 15-minute call next week suit you? No worries if the timing isn't right.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 62
+      },
+      "trace": {
+        "source_row": 46,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L045",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 3,
+      "lead_id": "L068",
+      "name": "Oscar Rivera",
+      "company": "Warehouse Automation",
+      "industry": "Logistics",
+      "company_size": 300,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-06",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Label and name both indicate warehouse operations.",
+      "factor_scores": {
+        "industry": 10,
+        "size": 10,
+        "source": 9,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 4.0,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 1.05
+      },
+      "final_score": 9.35,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 3,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Oscar Rivera, Warehouse Automation (300 people, Logistics, Referral, 15 days ago)\nScore: 9.35/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 10/10 -> 4.00 pts  \"Label and name both indicate warehouse operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (300 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 7/10 -> 1.05 pts  (15 days since contact)",
+      "message": {
+        "variant": "warm_followup",
+        "subject": "Following up on your referral",
+        "body": "Hi Oscar,\n\nThanks for connecting with us through a referral. It's good to meet the team at Warehouse Automation. OpsFlow helps logistics companies improve inventory and fleet visibility, reducing delays and improving efficiency.\n\nIf it would be useful, I can show you a short demo. Would a 15-minute call sometime next week work for you? No worries if the timing isn't right.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 67
+      },
+      "trace": {
+        "source_row": 69,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L068",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 4,
+      "lead_id": "L071",
+      "name": "Ruby Chen",
+      "company": "Sustainable Fashion",
+      "industry": "Retail",
+      "company_size": 85,
+      "source": "Sales call",
+      "last_interaction_date": "2024-01-03",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Retail label and name suggest operations in physical goods.",
+      "factor_scores": {
+        "industry": 9,
+        "size": 10,
+        "source": 8,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 3.6,
+        "size": 2.5,
+        "source": 1.6,
+        "recency": 1.05
+      },
+      "final_score": 8.75,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 4,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Ruby Chen, Sustainable Fashion (85 people, Retail, Sales call, 18 days ago)\nScore: 8.75/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 9/10 -> 3.60 pts  \"Retail label and name suggest operations in physical goods.\"\n  Company size (25%): 10/10 -> 2.50 pts  (85 employees, target range)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 7/10 -> 1.05 pts  (18 days since contact)",
+      "message": {
+        "variant": "value_led",
+        "subject": "Thanks for your interest in OpsFlow",
+        "body": "Hi Ruby,\n\nThanks for our recent conversation. I appreciate your interest in Sustainable Fashion. Many retailers face challenges with stockouts and manual processes, and OpsFlow can help streamline these operations.\n\nWould you like a short overview of our solution, or would a quick call be easier? No pressure either way.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 55
+      },
+      "trace": {
+        "source_row": 72,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L071",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 5,
+      "lead_id": "L087",
+      "name": "Harper Knight",
+      "company": "Retail Inventory",
+      "industry": "Retail",
+      "company_size": 140,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2023-12-18",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Retail label and name indicate inventory operations.",
+      "factor_scores": {
+        "industry": 9,
+        "size": 10,
+        "source": 10,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 3.6,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 0.6
+      },
+      "final_score": 8.7,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 5,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Harper Knight, Retail Inventory (140 people, Retail, Inbound demo request, 34 days ago)\nScore: 8.7/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 9/10 -> 3.60 pts  \"Retail label and name indicate inventory operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (140 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 4/10 -> 0.60 pts  (34 days since contact)",
+      "message": {
+        "variant": "reengagement",
+        "subject": "Checking in from OpsFlow",
+        "body": "Hi Harper,\n\nIt’s been a little while since you requested a demo, so I wanted to check in. OpsFlow provides valuable inventory tracking that can enhance visibility and efficiency in retail operations.\n\nIf you’re still interested, would a quick 15-minute call in the next couple of weeks be useful? If you'd rather not hear from us, just let me know.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 65
+      },
+      "trace": {
+        "source_row": 88,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L087",
+          "batch": 6,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 6,
+      "lead_id": "L093",
+      "name": "Natasha Volkov",
+      "company": "Import Export Trading",
+      "industry": "Trade",
+      "company_size": 350,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2023-12-12",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Trade label and name indicate operations involving physical goods.",
+      "factor_scores": {
+        "industry": 9,
+        "size": 10,
+        "source": 10,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 3.6,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 0.6
+      },
+      "final_score": 8.7,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 6,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Natasha Volkov, Import Export Trading (350 people, Trade, Inbound demo request, 40 days ago)\nScore: 8.7/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 9/10 -> 3.60 pts  \"Trade label and name indicate operations involving physical goods.\"\n  Company size (25%): 10/10 -> 2.50 pts  (350 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 4/10 -> 0.60 pts  (40 days since contact)",
+      "message": {
+        "variant": "reengagement",
+        "subject": "Checking in from OpsFlow",
+        "body": "Hi Natasha,\n\nIt’s been a little while since we last connected, so I wanted to reach out. OpsFlow’s demand and supply planning can help companies in trade manage their inventory more effectively.\n\nIf that sounds interesting, would a 15-minute call in the next couple of weeks be useful? If you'd rather not hear from us, just let me know.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 64
+      },
+      "trace": {
+        "source_row": 94,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L093",
+          "batch": 7,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 7,
+      "lead_id": "L099",
+      "name": "Tobias Wright",
+      "company": "Vehicle Tracking",
+      "industry": "Automotive",
+      "company_size": 220,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2023-12-06",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Automotive label and name indicate vehicle tracking operations.",
+      "factor_scores": {
+        "industry": 9,
+        "size": 10,
+        "source": 10,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 3.6,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 0.6
+      },
+      "final_score": 8.7,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 7,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Tobias Wright, Vehicle Tracking (220 people, Automotive, Inbound demo request, 46 days ago)\nScore: 8.7/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 9/10 -> 3.60 pts  \"Automotive label and name indicate vehicle tracking operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (220 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 4/10 -> 0.60 pts  (46 days since contact)",
+      "message": {
+        "variant": "reengagement",
+        "subject": "Checking in from OpsFlow",
+        "body": "Hi Tobias,\n\nIt’s been some time since your demo request, and I wanted to follow up. OpsFlow can provide fleet visibility that helps automotive businesses track their vehicles more efficiently.\n\nIf this is still relevant, would a quick 15-minute call in the next couple of weeks be beneficial? If you'd rather not hear from us, just let me know.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 64
+      },
+      "trace": {
+        "source_row": 100,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L099",
+          "batch": 7,
+          "attempts": 2
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 8,
+      "lead_id": "L005",
+      "name": "Emma Thompson",
+      "company": "RetailWorks Solutions",
+      "industry": "Retail",
+      "company_size": 200,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2023-11-10",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Retail label indicates a strong need for inventory and operations software.",
+      "factor_scores": {
+        "industry": 9,
+        "size": 10,
+        "source": 10,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 3.6,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 0.6
+      },
+      "final_score": 8.7,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 8,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Emma Thompson, RetailWorks Solutions (200 people, Retail, Inbound demo request, 72 days ago)\nScore: 8.7/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 9/10 -> 3.60 pts  \"Retail label indicates a strong need for inventory and operations software.\"\n  Company size (25%): 10/10 -> 2.50 pts  (200 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 4/10 -> 0.60 pts  (72 days since contact)",
+      "message": {
+        "variant": "reengagement",
+        "subject": "Checking in from OpsFlow",
+        "body": "Hi Emma,\n\nIt’s been a little while since you requested a demo, so I wanted to touch base. OpsFlow can simplify inventory management for retail businesses like RetailWorks Solutions.\n\nIf you're interested, would a short 15-minute call in the next couple of weeks work for you? If you'd rather not hear from us, just let me know.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 62
+      },
+      "trace": {
+        "source_row": 6,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 9,
+      "lead_id": "L067",
+      "name": "Natalie Stone",
+      "company": "Fashion E-commerce",
+      "industry": "Retail",
+      "company_size": 110,
+      "source": "Content download",
+      "last_interaction_date": "2024-01-07",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Retail label and name indicate strong need for inventory and logistics.",
+      "factor_scores": {
+        "industry": 9,
+        "size": 10,
+        "source": 5,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 3.6,
+        "size": 2.5,
+        "source": 1.0,
+        "recency": 1.5
+      },
+      "final_score": 8.6,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 9,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Natalie Stone, Fashion E-commerce (110 people, Retail, Content download, 14 days ago)\nScore: 8.6/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 9/10 -> 3.60 pts  \"Retail label and name indicate strong need for inventory and logistics.\"\n  Company size (25%): 10/10 -> 2.50 pts  (110 employees, target range)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 10/10 -> 1.50 pts  (14 days since contact)",
+      "message": {
+        "variant": "value_led",
+        "subject": "Thanks for your interest in OpsFlow",
+        "body": "Hi Natalie,\n\nThanks for downloading our content. Many retailers struggle with stock management and delivery timing, and OpsFlow can help streamline these processes for Fashion E-commerce.\n\nWould you prefer a short overview of our solution, or would a quick call be easier? No pressure either way.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 51
+      },
+      "trace": {
+        "source_row": 68,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L067",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 10,
+      "lead_id": "L074",
+      "name": "Ulysses Morgan",
+      "company": "Autonomous Vehicles",
+      "industry": "Automotive",
+      "company_size": 600,
+      "source": "Referral",
+      "last_interaction_date": "2023-12-31",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Automotive label and name indicate operations related to physical goods.",
+      "factor_scores": {
+        "industry": 10,
+        "size": 7,
+        "source": 9,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 4.0,
+        "size": 1.75,
+        "source": 1.8,
+        "recency": 1.05
+      },
+      "final_score": 8.6,
+      "decision": "qualified",
+      "priority": "HIGH",
+      "priority_rank": 10,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Ulysses Morgan, Autonomous Vehicles (600 people, Automotive, Referral, 21 days ago)\nScore: 8.6/10  Decision: QUALIFIED  Priority: HIGH\n  Industry fit (40%): 10/10 -> 4.00 pts  \"Automotive label and name indicate operations related to physical goods.\"\n  Company size (25%): 7/10 -> 1.75 pts  (600 employees, a little large)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 7/10 -> 1.05 pts  (21 days since contact)",
+      "message": {
+        "variant": "warm_followup",
+        "subject": "Following up on your referral",
+        "body": "Hi Ulysses,\n\nThanks for connecting with us through a referral. It’s a pleasure to meet someone from Autonomous Vehicles. OpsFlow can help automotive companies improve inventory and fleet visibility for better operations.\n\nIf it would be helpful, I can show you a short demo. Would a 15-minute call next week work for you? No worries if the timing isn't right.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 65
+      },
+      "trace": {
+        "source_row": 75,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L074",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 1,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 11,
+      "lead_id": "L049",
+      "name": "Victoria Summers",
+      "company": "Transportation Logistics",
+      "industry": "Logistics",
+      "company_size": 550,
+      "source": "Sales call",
+      "last_interaction_date": "2023-12-28",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Logistics label and name indicate physical goods operations.",
+      "factor_scores": {
+        "industry": 10,
+        "size": 7,
+        "source": 8,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 4.0,
+        "size": 1.75,
+        "source": 1.6,
+        "recency": 1.05
+      },
+      "final_score": 8.4,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 11,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Victoria Summers, Transportation Logistics (550 people, Logistics, Sales call, 24 days ago)\nScore: 8.4/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 10/10 -> 4.00 pts  \"Logistics label and name indicate physical goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (550 employees, a little large)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 7/10 -> 1.05 pts  (24 days since contact)",
+      "message": {
+        "variant": "value_led",
+        "subject": "Thanks for your interest in OpsFlow",
+        "body": "Hi Victoria,\n\nThanks for connecting with us during our recent call. Many logistics companies face challenges with tracking shipments and inventory accurately. OpsFlow can streamline these processes for Transportation Logistics by providing real-time visibility across your operations.\n\nWould you like a short overview of how we can help, or would a quick call be more convenient? No pressure either way.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 65
+      },
+      "trace": {
+        "source_row": 50,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L049",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 1
+        }
+      }
+    },
+    {
+      "rank": 12,
+      "lead_id": "L023",
+      "name": "Wendy Zhang",
+      "company": "Fashion Brand",
+      "industry": "Retail",
+      "company_size": 400,
+      "source": "Content download",
+      "last_interaction_date": "2024-01-05",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Retail label and name indicate a strong need for inventory management.",
+      "factor_scores": {
+        "industry": 9,
+        "size": 10,
+        "source": 5,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 3.6,
+        "size": 2.5,
+        "source": 1.0,
+        "recency": 1.05
+      },
+      "final_score": 8.15,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 12,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Wendy Zhang, Fashion Brand (400 people, Retail, Content download, 16 days ago)\nScore: 8.15/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 9/10 -> 3.60 pts  \"Retail label and name indicate a strong need for inventory management.\"\n  Company size (25%): 10/10 -> 2.50 pts  (400 employees, target range)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 7/10 -> 1.05 pts  (16 days since contact)",
+      "message": {
+        "variant": "value_led",
+        "subject": "Thanks for your interest in OpsFlow",
+        "body": "Hi Wendy,\n\nThanks for downloading our content. Many retail companies face challenges with inventory management and stockouts, especially in the fast-paced fashion industry. OpsFlow can help streamline your inventory tracking and visibility at Fashion Brand.\n\nWould it help if I sent a short overview, or would a quick call be easier? No pressure either way.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 60
+      },
+      "trace": {
+        "source_row": 24,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 13,
+      "lead_id": "L027",
+      "name": "Aaron Benjamin",
+      "company": "Supply Chain Co",
+      "industry": "Supply Chain",
+      "company_size": 320,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-02",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Supply Chain label and name indicate strong logistics needs.",
+      "factor_scores": {
+        "industry": 10,
+        "size": 10,
+        "source": 3,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 4.0,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 1.05
+      },
+      "final_score": 8.15,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 13,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Aaron Benjamin, Supply Chain Co (320 people, Supply Chain, LinkedIn outreach, 19 days ago)\nScore: 8.15/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 10/10 -> 4.00 pts  \"Supply Chain label and name indicate strong logistics needs.\"\n  Company size (25%): 10/10 -> 2.50 pts  (320 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 7/10 -> 1.05 pts  (19 days since contact)",
+      "message": {
+        "variant": "value_led",
+        "subject": "Thanks for connecting with OpsFlow",
+        "body": "Hi Aaron,\n\nThank you for connecting with us on LinkedIn. Supply Chain companies often struggle with demand forecasting and visibility, which can lead to inefficiencies. OpsFlow offers solutions to help improve these processes at Supply Chain Co.\n\nWould you like a short overview, or would a quick call be easier? No worries if you're busy.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 60
+      },
+      "trace": {
+        "source_row": 28,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 14,
+      "lead_id": "L082",
+      "name": "Cecilia Santos",
+      "company": "Freight Forwarding",
+      "industry": "Logistics",
+      "company_size": 400,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2023-12-23",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Logistics label and name indicate freight operations.",
+      "factor_scores": {
+        "industry": 10,
+        "size": 10,
+        "source": 3,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 4.0,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 1.05
+      },
+      "final_score": 8.15,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 14,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Cecilia Santos, Freight Forwarding (400 people, Logistics, LinkedIn outreach, 29 days ago)\nScore: 8.15/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 10/10 -> 4.00 pts  \"Logistics label and name indicate freight operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (400 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 7/10 -> 1.05 pts  (29 days since contact)",
+      "message": {
+        "variant": "value_led",
+        "subject": "Thanks for your interest in OpsFlow",
+        "body": "Hi Cecilia,\n\nThank you for reaching out via LinkedIn. Many logistics companies face challenges with tracking shipments and inventory, which can impact efficiency. OpsFlow provides tools to enhance visibility and streamline operations for companies like Freight Forwarding.\n\nWould a brief overview be helpful, or would you prefer a quick call? No pressure either way.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 59
+      },
+      "trace": {
+        "source_row": 83,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L082",
+          "batch": 6,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 15,
+      "lead_id": "L097",
+      "name": "Raymond Grant",
+      "company": "Logistics Tracking",
+      "industry": "Logistics",
+      "company_size": 300,
+      "source": "Content download",
+      "last_interaction_date": "2023-12-08",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Label and name both indicate logistics operations.",
+      "factor_scores": {
+        "industry": 10,
+        "size": 10,
+        "source": 5,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 4.0,
+        "size": 2.5,
+        "source": 1.0,
+        "recency": 0.6
+      },
+      "final_score": 8.1,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 15,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Raymond Grant, Logistics Tracking (300 people, Logistics, Content download, 44 days ago)\nScore: 8.1/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 10/10 -> 4.00 pts  \"Label and name both indicate logistics operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (300 employees, target range)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 4/10 -> 0.60 pts  (44 days since contact)",
+      "message": {
+        "variant": "reengagement",
+        "subject": "Checking in from OpsFlow",
+        "body": "Hi Raymond,\n\nIt's been a little while since you downloaded our content, so I wanted to check in. OpsFlow can help logistics companies like yours improve inventory tracking and visibility, making operations smoother.\n\nIf you're still interested, would a quick 15-minute call in the next couple of weeks be useful? If you'd rather not hear from us, just let me know.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 66
+      },
+      "trace": {
+        "source_row": 98,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L097",
+          "batch": 7,
+          "attempts": 2
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 16,
+      "lead_id": "L053",
+      "name": "Zachary Pierce",
+      "company": "Office Furniture",
+      "industry": "Retail",
+      "company_size": 175,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2023-12-18",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Retail label and name indicate physical goods operations.",
+      "factor_scores": {
+        "industry": 9,
+        "size": 10,
+        "source": 6,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 3.6,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 0.6
+      },
+      "final_score": 7.9,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 16,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Zachary Pierce, Office Furniture (175 people, Retail, Webinar attendee, 34 days ago)\nScore: 7.9/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 9/10 -> 3.60 pts  \"Retail label and name indicate physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (175 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 4/10 -> 0.60 pts  (34 days since contact)",
+      "message": {
+        "variant": "reengagement",
+        "subject": "Checking in from OpsFlow",
+        "body": "Hi Zachary,\n\nIt's been a little while since the webinar, so I wanted to follow up. OpsFlow can assist retail companies like Office Furniture with better inventory management and visibility, helping to prevent stockouts.\n\nIf that sounds useful, would a quick 15-minute call in the next couple of weeks work for you? If you'd rather not hear from us, just let me know.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 68
+      },
+      "trace": {
+        "source_row": 54,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L053",
+          "batch": 3,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 17,
+      "lead_id": "L007",
+      "name": "Grace Lee",
+      "company": "Manufacturing Co",
+      "industry": "Manufacturing",
+      "company_size": 450,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2023-10-05",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Manufacturing label indicates a strong need for operations software.",
+      "factor_scores": {
+        "industry": 10,
+        "size": 10,
+        "source": 6,
+        "recency": 1
+      },
+      "factor_points": {
+        "industry": 4.0,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 0.15
+      },
+      "final_score": 7.85,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 17,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Grace Lee, Manufacturing Co (450 people, Manufacturing, Webinar attendee, 108 days ago)\nScore: 7.85/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 10/10 -> 4.00 pts  \"Manufacturing label indicates a strong need for operations software.\"\n  Company size (25%): 10/10 -> 2.50 pts  (450 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 1/10 -> 0.15 pts  (108 days since contact)",
+      "message": {
+        "variant": "reengagement",
+        "subject": "Checking in from OpsFlow",
+        "body": "Hi Grace,\n\nIt's been some time since the webinar, and I wanted to reconnect. OpsFlow helps manufacturing companies improve demand and supply planning, allowing for smoother operations at Manufacturing Co.\n\nIf you're interested, would a quick 15-minute call in the next couple of weeks be useful? If you'd rather not hear from us, just let me know.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 62
+      },
+      "trace": {
+        "source_row": 8,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 18,
+      "lead_id": "L050",
+      "name": "William Knight",
+      "company": "Pharmaceutical Distribution",
+      "industry": "Healthcare",
+      "company_size": 400,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-04",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Healthcare label, but the name shows real distribution operations.",
+      "factor_scores": {
+        "industry": 6,
+        "size": 10,
+        "source": 9,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 2.4,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 1.05
+      },
+      "final_score": 7.75,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 18,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: William Knight, Pharmaceutical Distribution (400 people, Healthcare, Referral, 17 days ago)\nScore: 7.75/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 6/10 -> 2.40 pts  \"Healthcare label, but the name shows real distribution operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (400 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 7/10 -> 1.05 pts  (17 days since contact)",
+      "message": {
+        "variant": "warm_followup",
+        "subject": "Following up on your referral",
+        "body": "Hi William,\n\nThanks for connecting with us through a referral. It's great to meet the team at Pharmaceutical Distribution. OpsFlow can support healthcare companies in managing inventory and ensuring timely deliveries.\n\nIf it would be useful, I can walk you through a short demo. Would a 15-minute call sometime next week suit you? No worries if the timing isn't right.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 65
+      },
+      "trace": {
+        "source_row": 51,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L050",
+          "batch": 3,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 19,
+      "lead_id": "L065",
+      "name": "Lauren Blake",
+      "company": "Medical Devices",
+      "industry": "Healthcare",
+      "company_size": 450,
+      "source": "Sales call",
+      "last_interaction_date": "2024-01-09",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Healthcare label, but medical devices may involve some logistics.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 10,
+        "source": 8,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 2.5,
+        "source": 1.6,
+        "recency": 1.5
+      },
+      "final_score": 7.6,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 19,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Lauren Blake, Medical Devices (450 people, Healthcare, Sales call, 12 days ago)\nScore: 7.6/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Healthcare label, but medical devices may involve some logistics.\"\n  Company size (25%): 10/10 -> 2.50 pts  (450 employees, target range)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 10/10 -> 1.50 pts  (12 days since contact)",
+      "message": {
+        "variant": "value_led",
+        "subject": "Thanks for your interest in OpsFlow",
+        "body": "Hi Lauren,\n\nThank you for our recent conversation. Many healthcare companies face difficulties with demand forecasting and inventory management. OpsFlow provides solutions to address these challenges for companies like Medical Devices.\n\nWould you like a short overview, or would a quick call be easier? No pressure either way.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 53
+      },
+      "trace": {
+        "source_row": 66,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L065",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 20,
+      "lead_id": "L075",
+      "name": "Veronica Adams",
+      "company": "Commercial Cleaning",
+      "industry": "Business Services",
+      "company_size": 180,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2023-12-30",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Business services with some physical operations, but partial need.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 10,
+        "source": 10,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.05
+      },
+      "final_score": 7.55,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 20,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Veronica Adams, Commercial Cleaning (180 people, Business Services, Inbound demo request, 22 days ago)\nScore: 7.55/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Business services with some physical operations, but partial need.\"\n  Company size (25%): 10/10 -> 2.50 pts  (180 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 7/10 -> 1.05 pts  (22 days since contact)",
+      "message": {
+        "variant": "warm_followup",
+        "subject": "Following up on your demo request",
+        "body": "Hi Veronica,\n\nThanks for your interest in a demo. It’s exciting to connect with someone from Commercial Cleaning. OpsFlow helps businesses in the services sector improve inventory visibility and tracking, making operations more efficient.\n\nIf it would be helpful, I can walk you through a short demo. Would a 15-minute call next week work for you? No worries if the timing isn't right.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 68
+      },
+      "trace": {
+        "source_row": 76,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L075",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 2,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "rank": 21,
+      "lead_id": "L041",
+      "name": "Olivia Martinez",
+      "company": "Renewable Energy Corp",
+      "industry": "Energy",
+      "company_size": 600,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-12",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Energy industry has some physical operations but is niche.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 7,
+        "source": 10,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 1.75,
+        "source": 2.0,
+        "recency": 1.5
+      },
+      "final_score": 7.25,
+      "decision": "qualified",
+      "priority": "MEDIUM",
+      "priority_rank": 21,
+      "rules_applied": [],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Olivia Martinez, Renewable Energy Corp (600 people, Energy, Inbound demo request, 9 days ago)\nScore: 7.25/10  Decision: QUALIFIED  Priority: MEDIUM\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Energy industry has some physical operations but is niche.\"\n  Company size (25%): 7/10 -> 1.75 pts  (600 employees, a little large)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 10/10 -> 1.50 pts  (9 days since contact)",
+      "message": {
+        "variant": "warm_followup",
+        "subject": "Following up on your demo request",
+        "body": "Hi Olivia,\n\nThanks for reaching out to us with your demo request. It's great to connect with someone from Renewable Energy Corp. At OpsFlow, we help energy companies streamline their operations by providing clear visibility into inventory and supply chain activities, reducing delays and improving efficiency.\n\nWould a 15-minute call next week work for you to walk through a short demo? No worries if the timing isn't right.\n\nBest regards,\nThe OpsFlow Team",
+        "word_count": 73
+      },
+      "trace": {
+        "source_row": 42,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L041",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": {
+          "status": "written",
+          "batch": 3,
+          "attempts": 1
+        }
+      }
+    },
+    {
+      "rank": 22,
+      "lead_id": "L010",
+      "name": "Jack White",
+      "company": "Digital Marketing Agency",
+      "industry": "Marketing",
+      "company_size": 120,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-19",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Marketing label indicates a company with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 10,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.5
+      },
+      "final_score": 6.8,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Jack White, Digital Marketing Agency (120 people, Marketing, Inbound demo request, 2 days ago)\nScore: 6.8/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Marketing label indicates a company with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (120 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 10/10 -> 1.50 pts  (2 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 11,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 23,
+      "lead_id": "L030",
+      "name": "Derek Johnson",
+      "company": "Cloud Infrastructure",
+      "industry": "SaaS",
+      "company_size": 200,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-19",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "SaaS label and name indicate a software company with no physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 10,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.5
+      },
+      "final_score": 6.8,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Derek Johnson, Cloud Infrastructure (200 people, SaaS, Inbound demo request, 2 days ago)\nScore: 6.8/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"SaaS label and name indicate a software company with no physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (200 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 10/10 -> 1.50 pts  (2 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 31,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L030",
+          "batch": 1,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 24,
+      "lead_id": "L036",
+      "name": "James Wilson",
+      "company": "Property Management",
+      "industry": "Real Estate",
+      "company_size": 180,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-18",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Real Estate label and name suggest a business focused on property management services.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 10,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.5
+      },
+      "final_score": 6.8,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: James Wilson, Property Management (180 people, Real Estate, Inbound demo request, 3 days ago)\nScore: 6.8/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Real Estate label and name suggest a business focused on property management services.\"\n  Company size (25%): 10/10 -> 2.50 pts  (180 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 10/10 -> 1.50 pts  (3 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 37,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L036",
+          "batch": 1,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 25,
+      "lead_id": "L057",
+      "name": "Dominic Wheeler",
+      "company": "Payment Processing",
+      "industry": "FinTech",
+      "company_size": 500,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-17",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "FinTech label indicates no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 10,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.5
+      },
+      "final_score": 6.8,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Dominic Wheeler, Payment Processing (500 people, FinTech, Inbound demo request, 4 days ago)\nScore: 6.8/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"FinTech label indicates no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (500 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 10/10 -> 1.50 pts  (4 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 58,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L057",
+          "batch": 3,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 26,
+      "lead_id": "L001",
+      "name": "Alice Chen",
+      "company": "CloudScale AI",
+      "industry": "SaaS",
+      "company_size": 50,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-15",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "SaaS label indicates a software company with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 10,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.5
+      },
+      "final_score": 6.8,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Alice Chen, CloudScale AI (50 people, SaaS, Inbound demo request, 6 days ago)\nScore: 6.8/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"SaaS label indicates a software company with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (50 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 10/10 -> 1.50 pts  (6 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 2,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 27,
+      "lead_id": "L063",
+      "name": "Jerome Long",
+      "company": "Logistics Optimization",
+      "industry": "Software",
+      "company_size": 85,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-11",
+      "tier": "none",
+      "confidence": "medium",
+      "industry_reason": "Name suggests a logistics software vendor, so a competitor rather than a buyer.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 10,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.5
+      },
+      "final_score": 6.8,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Jerome Long, Logistics Optimization (85 people, Software, Inbound demo request, 10 days ago)\nScore: 6.8/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Name suggests a logistics software vendor, so a competitor rather than a buyer.\"\n  Company size (25%): 10/10 -> 2.50 pts  (85 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 10/10 -> 1.50 pts  (10 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 64,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L063",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 28,
+      "lead_id": "L056",
+      "name": "Chloe Mitchell",
+      "company": "Supply Chain Analytics",
+      "industry": "Software",
+      "company_size": 60,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-18",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Software label suggests a vendor, not a buyer in logistics.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 9,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 1.5
+      },
+      "final_score": 6.6,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Chloe Mitchell, Supply Chain Analytics (60 people, Software, Referral, 3 days ago)\nScore: 6.6/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Software label suggests a vendor, not a buyer in logistics.\"\n  Company size (25%): 10/10 -> 2.50 pts  (60 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 10/10 -> 1.50 pts  (3 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 57,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L056",
+          "batch": 3,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 29,
+      "lead_id": "L035",
+      "name": "Isabella Romano",
+      "company": "Luxury Hotels",
+      "industry": "Hospitality",
+      "company_size": 350,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-16",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Hospitality label and name indicate a service-oriented business with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 9,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 1.5
+      },
+      "final_score": 6.6,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Isabella Romano, Luxury Hotels (350 people, Hospitality, Referral, 5 days ago)\nScore: 6.6/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Hospitality label and name indicate a service-oriented business with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (350 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 10/10 -> 1.50 pts  (5 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 36,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L035",
+          "batch": 1,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 30,
+      "lead_id": "L019",
+      "name": "Samuel Lee",
+      "company": "Cybersecurity Startup",
+      "industry": "Cybersecurity",
+      "company_size": 60,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-09",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Cybersecurity label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 9,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 1.5
+      },
+      "final_score": 6.6,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Samuel Lee, Cybersecurity Startup (60 people, Cybersecurity, Referral, 12 days ago)\nScore: 6.6/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Cybersecurity label indicates little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (60 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 10/10 -> 1.50 pts  (12 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 20,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 31,
+      "lead_id": "L047",
+      "name": "Theo Papadopoulos",
+      "company": "Construction Tech",
+      "industry": "Construction",
+      "company_size": 150,
+      "source": "Content download",
+      "last_interaction_date": "2024-01-06",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Construction has physical operations but partial need for our product.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 10,
+        "source": 5,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 2.5,
+        "source": 1.0,
+        "recency": 1.05
+      },
+      "final_score": 6.55,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Theo Papadopoulos, Construction Tech (150 people, Construction, Content download, 15 days ago)\nScore: 6.55/10  Decision: REVIEW\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Construction has physical operations but partial need for our product.\"\n  Company size (25%): 10/10 -> 2.50 pts  (150 employees, target range)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 7/10 -> 1.05 pts  (15 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 48,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L047",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 32,
+      "lead_id": "L076",
+      "name": "Walter Buchanan",
+      "company": "Construction Management",
+      "industry": "Construction",
+      "company_size": 320,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2023-12-29",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Construction label indicates physical operations, but partial need.",
+      "factor_scores": {
+        "industry": 6,
+        "size": 10,
+        "source": 3,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 2.4,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 1.05
+      },
+      "final_score": 6.55,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Walter Buchanan, Construction Management (320 people, Construction, LinkedIn outreach, 23 days ago)\nScore: 6.55/10  Decision: REVIEW\n  Industry fit (40%): 6/10 -> 2.40 pts  \"Construction label indicates physical operations, but partial need.\"\n  Company size (25%): 10/10 -> 2.50 pts  (320 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 7/10 -> 1.05 pts  (23 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 77,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L076",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 33,
+      "lead_id": "L009",
+      "name": "Iris Patel",
+      "company": "Logistics Global",
+      "industry": "Logistics",
+      "company_size": 800,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2023-09-20",
+      "tier": "best",
+      "confidence": "high",
+      "industry_reason": "Logistics label indicates a strong need for operations software.",
+      "factor_scores": {
+        "industry": 10,
+        "size": 7,
+        "source": 3,
+        "recency": 1
+      },
+      "factor_points": {
+        "industry": 4.0,
+        "size": 1.75,
+        "source": 0.6,
+        "recency": 0.15
+      },
+      "final_score": 6.5,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Iris Patel, Logistics Global (800 people, Logistics, LinkedIn outreach, 123 days ago)\nScore: 6.5/10  Decision: REVIEW\n  Industry fit (40%): 10/10 -> 4.00 pts  \"Logistics label indicates a strong need for operations software.\"\n  Company size (25%): 7/10 -> 1.75 pts  (800 employees, a little large)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 1/10 -> 0.15 pts  (123 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 10,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 34,
+      "lead_id": "L054",
+      "name": "Amelia Davis",
+      "company": "Cybersecurity Consulting",
+      "industry": "Cybersecurity",
+      "company_size": 95,
+      "source": "Sales call",
+      "last_interaction_date": "2024-01-20",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Cybersecurity consulting with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 8,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.6,
+        "recency": 1.5
+      },
+      "final_score": 6.4,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Amelia Davis, Cybersecurity Consulting (95 people, Cybersecurity, Sales call, 1 days ago)\nScore: 6.4/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Cybersecurity consulting with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (95 employees, target range)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 10/10 -> 1.50 pts  (1 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 55,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L054",
+          "batch": 3,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 35,
+      "lead_id": "L059",
+      "name": "Franklin Hayes",
+      "company": "Accounting Software",
+      "industry": "Software",
+      "company_size": 220,
+      "source": "Sales call",
+      "last_interaction_date": "2024-01-15",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Software label indicates no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 8,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.6,
+        "recency": 1.5
+      },
+      "final_score": 6.4,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Franklin Hayes, Accounting Software (220 people, Software, Sales call, 6 days ago)\nScore: 6.4/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Software label indicates no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (220 employees, target range)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 10/10 -> 1.50 pts  (6 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 60,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L059",
+          "batch": 3,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 36,
+      "lead_id": "L069",
+      "name": "Penny Walsh",
+      "company": "Mental Health Platform",
+      "industry": "HealthTech",
+      "company_size": 75,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-05",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "HealthTech typically does not involve physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 10,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.05
+      },
+      "final_score": 6.35,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Penny Walsh, Mental Health Platform (75 people, HealthTech, Inbound demo request, 16 days ago)\nScore: 6.35/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"HealthTech typically does not involve physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (75 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 7/10 -> 1.05 pts  (16 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 70,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L069",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 37,
+      "lead_id": "L081",
+      "name": "Bryson Hart",
+      "company": "Climate Analytics",
+      "industry": "Climate Tech",
+      "company_size": 70,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2023-12-24",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Climate Tech label with no physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 10,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 2.0,
+        "recency": 1.05
+      },
+      "final_score": 6.35,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Bryson Hart, Climate Analytics (70 people, Climate Tech, Inbound demo request, 28 days ago)\nScore: 6.35/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Climate Tech label with no physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (70 employees, target range)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 7/10 -> 1.05 pts  (28 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 82,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L081",
+          "batch": 6,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 38,
+      "lead_id": "L013",
+      "name": "Maya Desai",
+      "company": "Agricultural Tech",
+      "industry": "Agriculture",
+      "company_size": 45,
+      "source": "Content download",
+      "last_interaction_date": "2024-01-16",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Agriculture label suggests some physical operations.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 7,
+        "source": 5,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 1.75,
+        "source": 1.0,
+        "recency": 1.5
+      },
+      "final_score": 6.25,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Maya Desai, Agricultural Tech (45 people, Agriculture, Content download, 5 days ago)\nScore: 6.25/10  Decision: REVIEW\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Agriculture label suggests some physical operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (45 employees, a little small)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 10/10 -> 1.50 pts  (5 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 14,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 39,
+      "lead_id": "L025",
+      "name": "Yuki Tanaka",
+      "company": "Travel Technology",
+      "industry": "Travel",
+      "company_size": 55,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-04",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Travel industry with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 9,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 1.05
+      },
+      "final_score": 6.15,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Yuki Tanaka, Travel Technology (55 people, Travel, Referral, 17 days ago)\nScore: 6.15/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Travel industry with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (55 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 7/10 -> 1.05 pts  (17 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 26,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 40,
+      "lead_id": "L080",
+      "name": "Audrey Powell",
+      "company": "Dental Practice Management",
+      "industry": "Healthcare",
+      "company_size": 150,
+      "source": "Referral",
+      "last_interaction_date": "2023-12-25",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Healthcare label with no physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 9,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 1.05
+      },
+      "final_score": 6.15,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Audrey Powell, Dental Practice Management (150 people, Healthcare, Referral, 27 days ago)\nScore: 6.15/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Healthcare label with no physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (150 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 7/10 -> 1.05 pts  (27 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 81,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L080",
+          "batch": 6,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 41,
+      "lead_id": "L006",
+      "name": "Frank Liu",
+      "company": "Healthcare Systems Ltd",
+      "industry": "Healthcare",
+      "company_size": 1200,
+      "source": "Sales call",
+      "last_interaction_date": "2024-01-12",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Healthcare label, but the name does not indicate physical operations.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 4,
+        "source": 8,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 1.0,
+        "source": 1.6,
+        "recency": 1.5
+      },
+      "final_score": 6.1,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Frank Liu, Healthcare Systems Ltd (1,200 people, Healthcare, Sales call, 9 days ago)\nScore: 6.1/10  Decision: REVIEW\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Healthcare label, but the name does not indicate physical operations.\"\n  Company size (25%): 4/10 -> 1.00 pts  (1200 employees, too large for a standard deal)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 10/10 -> 1.50 pts  (9 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 7,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 42,
+      "lead_id": "L044",
+      "name": "Rebecca Green",
+      "company": "Waste Management",
+      "industry": "Environmental",
+      "company_size": 1100,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2024-01-08",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Environmental label, but waste management involves physical operations.",
+      "factor_scores": {
+        "industry": 6,
+        "size": 4,
+        "source": 6,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 2.4,
+        "size": 1.0,
+        "source": 1.2,
+        "recency": 1.5
+      },
+      "final_score": 6.1,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Rebecca Green, Waste Management (1,100 people, Environmental, Webinar attendee, 13 days ago)\nScore: 6.1/10  Decision: REVIEW\n  Industry fit (40%): 6/10 -> 2.40 pts  \"Environmental label, but waste management involves physical operations.\"\n  Company size (25%): 4/10 -> 1.00 pts  (1100 employees, too large for a standard deal)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 10/10 -> 1.50 pts  (13 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 45,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L044",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 43,
+      "lead_id": "L085",
+      "name": "Finn O'Brien",
+      "company": "Craft Beverage",
+      "industry": "Consumer",
+      "company_size": 85,
+      "source": "Content download",
+      "last_interaction_date": "2023-12-20",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Consumer label, but name suggests physical beverage operations.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 10,
+        "source": 5,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 2.5,
+        "source": 1.0,
+        "recency": 0.6
+      },
+      "final_score": 6.1,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Finn O'Brien, Craft Beverage (85 people, Consumer, Content download, 32 days ago)\nScore: 6.1/10  Decision: REVIEW\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Consumer label, but name suggests physical beverage operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (85 employees, target range)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 4/10 -> 0.60 pts  (32 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 86,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L085",
+          "batch": 6,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 44,
+      "lead_id": "L033",
+      "name": "Gabriella Torres",
+      "company": "Beauty & Cosmetics",
+      "industry": "Consumer",
+      "company_size": 120,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2024-01-14",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Consumer label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 6,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 1.5
+      },
+      "final_score": 6.0,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Gabriella Torres, Beauty & Cosmetics (120 people, Consumer, Webinar attendee, 7 days ago)\nScore: 6/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Consumer label indicates little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (120 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 10/10 -> 1.50 pts  (7 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 34,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L033",
+          "batch": 1,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 45,
+      "lead_id": "L060",
+      "name": "Gina Reeves",
+      "company": "E-commerce Platform",
+      "industry": "SaaS",
+      "company_size": 140,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2024-01-14",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "SaaS label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 6,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 1.5
+      },
+      "final_score": 6.0,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Gina Reeves, E-commerce Platform (140 people, SaaS, Webinar attendee, 7 days ago)\nScore: 6/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"SaaS label indicates little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (140 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 10/10 -> 1.50 pts  (7 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 61,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L060",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 46,
+      "lead_id": "L017",
+      "name": "Quinn Matthews",
+      "company": "Consulting Firm",
+      "industry": "Consulting",
+      "company_size": 180,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2024-01-11",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Consulting label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 6,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 1.5
+      },
+      "final_score": 6.0,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Quinn Matthews, Consulting Firm (180 people, Consulting, Webinar attendee, 10 days ago)\nScore: 6/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Consulting label indicates little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (180 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 10/10 -> 1.50 pts  (10 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 18,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 47,
+      "lead_id": "L022",
+      "name": "Victor Moore",
+      "company": "Real Estate Platform",
+      "industry": "Real Estate",
+      "company_size": 250,
+      "source": "Sales call",
+      "last_interaction_date": "2024-01-06",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Real estate has little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 8,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.6,
+        "recency": 1.05
+      },
+      "final_score": 5.95,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Victor Moore, Real Estate Platform (250 people, Real Estate, Sales call, 15 days ago)\nScore: 5.95/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Real estate has little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (250 employees, target range)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 7/10 -> 1.05 pts  (15 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 23,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 48,
+      "lead_id": "L077",
+      "name": "Ximena Flores",
+      "company": "Gaming Studio",
+      "industry": "Entertainment",
+      "company_size": 95,
+      "source": "Sales call",
+      "last_interaction_date": "2023-12-28",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Entertainment label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 8,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.6,
+        "recency": 1.05
+      },
+      "final_score": 5.95,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Ximena Flores, Gaming Studio (95 people, Entertainment, Sales call, 24 days ago)\nScore: 5.95/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Entertainment label indicates little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (95 employees, target range)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 7/10 -> 1.05 pts  (24 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 78,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L077",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 49,
+      "lead_id": "L020",
+      "name": "Tina Patel",
+      "company": "Energy Solutions",
+      "industry": "Energy",
+      "company_size": 900,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2023-10-18",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Energy label suggests some physical operations.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 7,
+        "source": 10,
+        "recency": 1
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 1.75,
+        "source": 2.0,
+        "recency": 0.15
+      },
+      "final_score": 5.9,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Tina Patel, Energy Solutions (900 people, Energy, Inbound demo request, 95 days ago)\nScore: 5.9/10  Decision: REVIEW\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Energy label suggests some physical operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (900 employees, a little large)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 1/10 -> 0.15 pts  (95 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 21,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 50,
+      "lead_id": "L012",
+      "name": "Leon Chen",
+      "company": "FinTech Startup",
+      "industry": "FinTech",
+      "company_size": 25,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-17",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "FinTech label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 9,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.8,
+        "recency": 1.5
+      },
+      "final_score": 5.85,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Leon Chen, FinTech Startup (25 people, FinTech, Referral, 4 days ago)\nScore: 5.85/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"FinTech label indicates little physical-goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (25 employees, a little small)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 10/10 -> 1.50 pts  (4 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 13,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 51,
+      "lead_id": "L039",
+      "name": "Mona Patel",
+      "company": "Blockchain Startup",
+      "industry": "Cryptocurrency",
+      "company_size": 22,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-15",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Cryptocurrency label and name indicate a business focused on digital currency with no physical operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 9,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.8,
+        "recency": 1.5
+      },
+      "final_score": 5.85,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Mona Patel, Blockchain Startup (22 people, Cryptocurrency, Referral, 6 days ago)\nScore: 5.85/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Cryptocurrency label and name indicate a business focused on digital currency with no physical operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (22 employees, a little small)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 10/10 -> 1.50 pts  (6 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 40,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L039",
+          "batch": 1,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 52,
+      "lead_id": "L008",
+      "name": "Henry Park",
+      "company": "EdTech Innovations",
+      "industry": "EdTech",
+      "company_size": 75,
+      "source": "Content download",
+      "last_interaction_date": "2024-01-14",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "EdTech label indicates a company with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 5,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.0,
+        "recency": 1.5
+      },
+      "final_score": 5.8,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Henry Park, EdTech Innovations (75 people, EdTech, Content download, 7 days ago)\nScore: 5.8/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"EdTech label indicates a company with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (75 employees, target range)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 10/10 -> 1.50 pts  (7 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 9,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 53,
+      "lead_id": "L079",
+      "name": "Zachary Coleman",
+      "company": "Landscaping Services",
+      "industry": "Services",
+      "company_size": 42,
+      "source": "Content download",
+      "last_interaction_date": "2023-12-26",
+      "tier": "unknown",
+      "confidence": "low",
+      "industry_reason": "Name and generic label do not show what the business does.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 7,
+        "source": 5,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 1.75,
+        "source": 1.0,
+        "recency": 1.05
+      },
+      "final_score": 5.8,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Zachary Coleman, Landscaping Services (42 people, Services, Content download, 26 days ago)\nScore: 5.8/10  Decision: REVIEW\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Name and generic label do not show what the business does.\"\n  Company size (25%): 7/10 -> 1.75 pts  (42 employees, a little small)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 7/10 -> 1.05 pts  (26 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 80,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L079",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 54,
+      "lead_id": "L086",
+      "name": "Gemma Hart",
+      "company": "Public Relations Firm",
+      "industry": "Marketing",
+      "company_size": 75,
+      "source": "Referral",
+      "last_interaction_date": "2023-12-19",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Marketing label with no physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 9,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 0.6
+      },
+      "final_score": 5.7,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Gemma Hart, Public Relations Firm (75 people, Marketing, Referral, 33 days ago)\nScore: 5.7/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Marketing label with no physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (75 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 4/10 -> 0.60 pts  (33 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 87,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L086",
+          "batch": 6,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 55,
+      "lead_id": "L092",
+      "name": "Marcus Stewart",
+      "company": "Cyber Insurance",
+      "industry": "Insurance",
+      "company_size": 220,
+      "source": "Referral",
+      "last_interaction_date": "2023-12-13",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Insurance industry with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 9,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 0.6
+      },
+      "final_score": 5.7,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Marcus Stewart, Cyber Insurance (220 people, Insurance, Referral, 39 days ago)\nScore: 5.7/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Insurance industry with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (220 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 4/10 -> 0.60 pts  (39 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 93,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L092",
+          "batch": 7,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 56,
+      "lead_id": "L098",
+      "name": "Sophie Lawrence",
+      "company": "Laboratory Information",
+      "industry": "Healthcare",
+      "company_size": 170,
+      "source": "Referral",
+      "last_interaction_date": "2023-12-07",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Healthcare label with no physical-goods operations indicated.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 9,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.8,
+        "recency": 0.6
+      },
+      "final_score": 5.7,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Sophie Lawrence, Laboratory Information (170 people, Healthcare, Referral, 45 days ago)\nScore: 5.7/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Healthcare label with no physical-goods operations indicated.\"\n  Company size (25%): 10/10 -> 2.50 pts  (170 employees, target range)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 4/10 -> 0.60 pts  (45 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 99,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L098",
+          "batch": 7,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 57,
+      "lead_id": "L100",
+      "name": "Uriel Reyes",
+      "company": "Waste Reduction",
+      "industry": "Environmental",
+      "company_size": 95,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2023-12-05",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Environmental label, but the name suggests some physical operations related to waste.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 10,
+        "source": 3,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 0.6
+      },
+      "final_score": 5.7,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Uriel Reyes, Waste Reduction (95 people, Environmental, LinkedIn outreach, 47 days ago)\nScore: 5.7/10  Decision: REVIEW\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Environmental label, but the name suggests some physical operations related to waste.\"\n  Company size (25%): 10/10 -> 2.50 pts  (95 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 4/10 -> 0.60 pts  (47 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 101,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L100",
+          "batch": 8,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 58,
+      "lead_id": "L038",
+      "name": "Liam O'Connor",
+      "company": "Venture Capital Fund",
+      "industry": "Finance",
+      "company_size": 40,
+      "source": "Sales call",
+      "last_interaction_date": "2024-01-10",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Finance label suggests no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 8,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.6,
+        "recency": 1.5
+      },
+      "final_score": 5.65,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Liam O'Connor, Venture Capital Fund (40 people, Finance, Sales call, 11 days ago)\nScore: 5.65/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Finance label suggests no physical-goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (40 employees, a little small)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 10/10 -> 1.50 pts  (11 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 39,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L038",
+          "batch": 1,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 59,
+      "lead_id": "L051",
+      "name": "Xander Brooks",
+      "company": "Virtual Reality Studios",
+      "industry": "Entertainment",
+      "company_size": 45,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-03",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Entertainment industry with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 10,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 2.0,
+        "recency": 1.05
+      },
+      "final_score": 5.6,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Xander Brooks, Virtual Reality Studios (45 people, Entertainment, Inbound demo request, 18 days ago)\nScore: 5.6/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Entertainment industry with no physical-goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (45 employees, a little small)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 7/10 -> 1.05 pts  (18 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 52,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L051",
+          "batch": 3,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 60,
+      "lead_id": "L072",
+      "name": "Silas Brown",
+      "company": "Financial Advisory",
+      "industry": "Finance",
+      "company_size": 140,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2024-01-02",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Financial services with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 6,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 1.05
+      },
+      "final_score": 5.55,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Silas Brown, Financial Advisory (140 people, Finance, Webinar attendee, 19 days ago)\nScore: 5.55/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Financial services with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (140 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 7/10 -> 1.05 pts  (19 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 73,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L072",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 61,
+      "lead_id": "L078",
+      "name": "Yolanda Martinez",
+      "company": "Customer Support Platform",
+      "industry": "SaaS",
+      "company_size": 110,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2023-12-27",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "SaaS label indicates a software company.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 6,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 1.05
+      },
+      "final_score": 5.55,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Yolanda Martinez, Customer Support Platform (110 people, SaaS, Webinar attendee, 25 days ago)\nScore: 5.55/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"SaaS label indicates a software company.\"\n  Company size (25%): 10/10 -> 2.50 pts  (110 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 7/10 -> 1.05 pts  (25 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 79,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L078",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 62,
+      "lead_id": "L024",
+      "name": "Xavier Lopez",
+      "company": "Data Analytics Firm",
+      "industry": "Analytics",
+      "company_size": 110,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2023-12-22",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Analytics industry has little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 6,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 1.05
+      },
+      "final_score": 5.55,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Xavier Lopez, Data Analytics Firm (110 people, Analytics, Webinar attendee, 30 days ago)\nScore: 5.55/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Analytics industry has little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (110 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 7/10 -> 1.05 pts  (30 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 25,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 63,
+      "lead_id": "L089",
+      "name": "Julian Parks",
+      "company": "Hotel Management",
+      "industry": "Hospitality",
+      "company_size": 250,
+      "source": "Sales call",
+      "last_interaction_date": "2023-12-16",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Hospitality industry with little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 8,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.6,
+        "recency": 0.6
+      },
+      "final_score": 5.5,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Julian Parks, Hotel Management (250 people, Hospitality, Sales call, 36 days ago)\nScore: 5.5/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Hospitality industry with little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (250 employees, target range)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 4/10 -> 0.60 pts  (36 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 90,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L089",
+          "batch": 6,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 64,
+      "lead_id": "L095",
+      "name": "Priya Patel",
+      "company": "Network Security",
+      "industry": "Cybersecurity",
+      "company_size": 180,
+      "source": "Sales call",
+      "last_interaction_date": "2023-12-10",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Cybersecurity industry with no physical operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 8,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.6,
+        "recency": 0.6
+      },
+      "final_score": 5.5,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Priya Patel, Network Security (180 people, Cybersecurity, Sales call, 42 days ago)\nScore: 5.5/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Cybersecurity industry with no physical operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (180 employees, target range)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 4/10 -> 0.60 pts  (42 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 96,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L095",
+          "batch": 7,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 65,
+      "lead_id": "L028",
+      "name": "Bella Cross",
+      "company": "Legal Services Firm",
+      "industry": "Legal",
+      "company_size": 90,
+      "source": "Sales call",
+      "last_interaction_date": "2023-11-30",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Legal services with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 8,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.6,
+        "recency": 0.6
+      },
+      "final_score": 5.5,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Bella Cross, Legal Services Firm (90 people, Legal, Sales call, 52 days ago)\nScore: 5.5/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Legal services with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (90 employees, target range)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 4/10 -> 0.60 pts  (52 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 29,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 66,
+      "lead_id": "L058",
+      "name": "Evelyn Richardson",
+      "company": "Human Resources Tech",
+      "industry": "HR Tech",
+      "company_size": 70,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-16",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "HR Tech label indicates no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 3,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 1.5
+      },
+      "final_score": 5.4,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Evelyn Richardson, Human Resources Tech (70 people, HR Tech, LinkedIn outreach, 5 days ago)\nScore: 5.4/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"HR Tech label indicates no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (70 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 10/10 -> 1.50 pts  (5 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 59,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L058",
+          "batch": 3,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 67,
+      "lead_id": "L037",
+      "name": "Katherine Lee",
+      "company": "Artificial Intelligence Lab",
+      "industry": "AI/ML",
+      "company_size": 65,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-13",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "AI/ML label and name indicate a technology-focused company with no physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 3,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 1.5
+      },
+      "final_score": 5.4,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Katherine Lee, Artificial Intelligence Lab (65 people, AI/ML, LinkedIn outreach, 8 days ago)\nScore: 5.4/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"AI/ML label and name indicate a technology-focused company with no physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (65 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 10/10 -> 1.50 pts  (8 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 38,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L037",
+          "batch": 1,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 68,
+      "lead_id": "L064",
+      "name": "Kennedy Owens",
+      "company": "Environmental Monitoring",
+      "industry": "Climate Tech",
+      "company_size": 55,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-10",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Climate tech typically does not involve physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 3,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 1.5
+      },
+      "final_score": 5.4,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Kennedy Owens, Environmental Monitoring (55 people, Climate Tech, LinkedIn outreach, 11 days ago)\nScore: 5.4/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Climate tech typically does not involve physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (55 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 10/10 -> 1.50 pts  (11 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 65,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L064",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 69,
+      "lead_id": "L042",
+      "name": "Patricia Brown",
+      "company": "Biotechnology Research",
+      "industry": "Biotech",
+      "company_size": 250,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-09",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Biotech has little or no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 3,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 1.5
+      },
+      "final_score": 5.4,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Patricia Brown, Biotechnology Research (250 people, Biotech, LinkedIn outreach, 12 days ago)\nScore: 5.4/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Biotech has little or no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (250 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 10/10 -> 1.50 pts  (12 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 43,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L042",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 70,
+      "lead_id": "L029",
+      "name": "Cassandra Jones",
+      "company": "Media & Entertainment",
+      "industry": "Media",
+      "company_size": 150,
+      "source": "Content download",
+      "last_interaction_date": "2024-01-01",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Media and entertainment industry with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 5,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.0,
+        "recency": 1.05
+      },
+      "final_score": 5.35,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Cassandra Jones, Media & Entertainment (150 people, Media, Content download, 20 days ago)\nScore: 5.35/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Media and entertainment industry with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (150 employees, target range)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 7/10 -> 1.05 pts  (20 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 30,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 71,
+      "lead_id": "L073",
+      "name": "Tara Gonzalez",
+      "company": "Nutrition Tech",
+      "industry": "HealthTech",
+      "company_size": 50,
+      "source": "Content download",
+      "last_interaction_date": "2024-01-01",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "HealthTech label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 5,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.0,
+        "recency": 1.05
+      },
+      "final_score": 5.35,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Tara Gonzalez, Nutrition Tech (50 people, HealthTech, Content download, 20 days ago)\nScore: 5.35/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"HealthTech label indicates little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (50 employees, target range)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 7/10 -> 1.05 pts  (20 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 74,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L073",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 72,
+      "lead_id": "L014",
+      "name": "Nathan Brooks",
+      "company": "Enterprise Solutions Corp",
+      "industry": "Software",
+      "company_size": 3500,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2024-01-13",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Software label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 4,
+        "source": 10,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.0,
+        "source": 2.0,
+        "recency": 1.5
+      },
+      "final_score": 5.3,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Nathan Brooks, Enterprise Solutions Corp (3,500 people, Software, Inbound demo request, 8 days ago)\nScore: 5.3/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Software label indicates little physical-goods operations.\"\n  Company size (25%): 4/10 -> 1.00 pts  (3500 employees, too large for a standard deal)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 10/10 -> 1.50 pts  (8 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 15,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 73,
+      "lead_id": "L066",
+      "name": "Marcus Hunt",
+      "company": "Venture Studio",
+      "industry": "Finance",
+      "company_size": 35,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2024-01-08",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Finance industry has little to do with physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 6,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.2,
+        "recency": 1.5
+      },
+      "final_score": 5.25,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Marcus Hunt, Venture Studio (35 people, Finance, Webinar attendee, 13 days ago)\nScore: 5.25/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Finance industry has little to do with physical goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (35 employees, a little small)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 10/10 -> 1.50 pts  (13 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 67,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L066",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 74,
+      "lead_id": "L083",
+      "name": "Daisy Newton",
+      "company": "Wedding Planning Tech",
+      "industry": "Events",
+      "company_size": 38,
+      "source": "Sales call",
+      "last_interaction_date": "2023-12-22",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Events label with no physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 8,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.6,
+        "recency": 1.05
+      },
+      "final_score": 5.2,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Daisy Newton, Wedding Planning Tech (38 people, Events, Sales call, 30 days ago)\nScore: 5.2/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Events label with no physical goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (38 employees, a little small)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 7/10 -> 1.05 pts  (30 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 84,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L083",
+          "batch": 6,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 75,
+      "lead_id": "L026",
+      "name": "Zara Hassan",
+      "company": "Education Institution",
+      "industry": "Education",
+      "company_size": 600,
+      "source": "Inbound demo request",
+      "last_interaction_date": "2023-12-05",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Education sector with little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 10,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 2.0,
+        "recency": 0.6
+      },
+      "final_score": 5.15,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Zara Hassan, Education Institution (600 people, Education, Inbound demo request, 47 days ago)\nScore: 5.15/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Education sector with little physical-goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (600 employees, a little large)\n  Lead source  (20%): 10/10 -> 2.00 pts  (Inbound demo request)\n  Engagement   (15%): 4/10 -> 0.60 pts  (47 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 27,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 76,
+      "lead_id": "L062",
+      "name": "Iris Wagner",
+      "company": "Telecommunications Equipment",
+      "industry": "Telecom",
+      "company_size": 2000,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-12",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Telecom industry does not involve physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 4,
+        "source": 9,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.0,
+        "source": 1.8,
+        "recency": 1.5
+      },
+      "final_score": 5.1,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Iris Wagner, Telecommunications Equipment (2,000 people, Telecom, Referral, 9 days ago)\nScore: 5.1/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Telecom industry does not involve physical goods operations.\"\n  Company size (25%): 4/10 -> 1.00 pts  (2000 employees, too large for a standard deal)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 10/10 -> 1.50 pts  (9 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 63,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L062",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 77,
+      "lead_id": "L084",
+      "name": "Ezra Fox",
+      "company": "Veterinary Practice",
+      "industry": "Healthcare",
+      "company_size": 65,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2023-12-21",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Healthcare label with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 6,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 0.6
+      },
+      "final_score": 5.1,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Ezra Fox, Veterinary Practice (65 people, Healthcare, Webinar attendee, 31 days ago)\nScore: 5.1/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Healthcare label with no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (65 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 4/10 -> 0.60 pts  (31 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 85,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L084",
+          "batch": 6,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 78,
+      "lead_id": "L090",
+      "name": "Kevin Grant",
+      "company": "Knowledge Management",
+      "industry": "Software",
+      "company_size": 125,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2023-12-15",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Label and name indicate a software company with no physical operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 6,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.2,
+        "recency": 0.6
+      },
+      "final_score": 5.1,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Kevin Grant, Knowledge Management (125 people, Software, Webinar attendee, 37 days ago)\nScore: 5.1/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Label and name indicate a software company with no physical operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (125 employees, target range)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 4/10 -> 0.60 pts  (37 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 91,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L090",
+          "batch": 7,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 79,
+      "lead_id": "L055",
+      "name": "Bradley Foster",
+      "company": "Cloud Storage",
+      "industry": "SaaS",
+      "company_size": 800,
+      "source": "Content download",
+      "last_interaction_date": "2024-01-19",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "SaaS label and name indicate no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 5,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.0,
+        "recency": 1.5
+      },
+      "final_score": 5.05,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Bradley Foster, Cloud Storage (800 people, SaaS, Content download, 2 days ago)\nScore: 5.05/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"SaaS label and name indicate no physical-goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (800 employees, a little large)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 10/10 -> 1.50 pts  (2 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 56,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L055",
+          "batch": 3,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 80,
+      "lead_id": "L061",
+      "name": "Harrison Scott",
+      "company": "Commercial Real Estate",
+      "industry": "Real Estate",
+      "company_size": 900,
+      "source": "Content download",
+      "last_interaction_date": "2024-01-13",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Real estate has little to do with physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 5,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.0,
+        "recency": 1.5
+      },
+      "final_score": 5.05,
+      "decision": "review",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [
+        "score is in the review band (5 to below 7)"
+      ],
+      "rejection_reason": null,
+      "flags": [],
+      "explanation": "Lead: Harrison Scott, Commercial Real Estate (900 people, Real Estate, Content download, 8 days ago)\nScore: 5.05/10  Decision: REVIEW\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Real estate has little to do with physical goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (900 employees, a little large)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 10/10 -> 1.50 pts  (8 days since contact)\n  Rule applied: score is in the review band (5 to below 7)",
+      "message": null,
+      "trace": {
+        "source_row": 62,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L061",
+          "batch": 4,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 81,
+      "lead_id": "L048",
+      "name": "Ursula Hoffmann",
+      "company": "Insurance Tech",
+      "industry": "InsurTech",
+      "company_size": 130,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-05",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "InsurTech has little or no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 3,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 1.05
+      },
+      "final_score": 4.95,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Ursula Hoffmann, Insurance Tech (130 people, InsurTech, LinkedIn outreach, 16 days ago)\nScore: 4.95/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"InsurTech has little or no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (130 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 7/10 -> 1.05 pts  (16 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 49,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L048",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 82,
+      "lead_id": "L070",
+      "name": "Quinton Price",
+      "company": "Database Software",
+      "industry": "Software",
+      "company_size": 250,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-04",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Label and name indicate a software company.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 3,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 1.05
+      },
+      "final_score": 4.95,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Quinton Price, Database Software (250 people, Software, LinkedIn outreach, 17 days ago)\nScore: 4.95/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Label and name indicate a software company.\"\n  Company size (25%): 10/10 -> 2.50 pts  (250 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 7/10 -> 1.05 pts  (17 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 71,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L070",
+          "batch": 5,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 83,
+      "lead_id": "L040",
+      "name": "Nicholas Anderson",
+      "company": "Sports Management",
+      "industry": "Sports",
+      "company_size": 85,
+      "source": "Content download",
+      "last_interaction_date": "2023-12-20",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Sports management has little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 5,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 1.0,
+        "recency": 0.6
+      },
+      "final_score": 4.9,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Nicholas Anderson, Sports Management (85 people, Sports, Content download, 32 days ago)\nScore: 4.9/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Sports management has little physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (85 employees, target range)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 4/10 -> 0.60 pts  (32 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 41,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L040",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 84,
+      "lead_id": "L011",
+      "name": "Karen Miller",
+      "company": "InsurancePro",
+      "industry": "Insurance",
+      "company_size": 600,
+      "source": "Sales call",
+      "last_interaction_date": "2023-12-15",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Insurance label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 8,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.6,
+        "recency": 0.6
+      },
+      "final_score": 4.75,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Karen Miller, InsurancePro (600 people, Insurance, Sales call, 37 days ago)\nScore: 4.75/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Insurance label indicates little physical-goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (600 employees, a little large)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 4/10 -> 0.60 pts  (37 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 12,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 85,
+      "lead_id": "L031",
+      "name": "Ethan Smith",
+      "company": "Mobile Development",
+      "industry": "Software",
+      "company_size": 40,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-17",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Software label and name indicate a company focused on software development.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 3,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 0.6,
+        "recency": 1.5
+      },
+      "final_score": 4.65,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Ethan Smith, Mobile Development (40 people, Software, LinkedIn outreach, 4 days ago)\nScore: 4.65/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Software label and name indicate a company focused on software development.\"\n  Company size (25%): 7/10 -> 1.75 pts  (40 employees, a little small)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 10/10 -> 1.50 pts  (4 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 32,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L031",
+          "batch": 1,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 86,
+      "lead_id": "L021",
+      "name": "Uma Singh",
+      "company": "Event Planning Co",
+      "industry": "Events",
+      "company_size": 35,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-08",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Events industry has little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 3,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 0.6,
+        "recency": 1.5
+      },
+      "final_score": 4.65,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Uma Singh, Event Planning Co (35 people, Events, LinkedIn outreach, 13 days ago)\nScore: 4.65/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Events industry has little physical-goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (35 employees, a little small)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 10/10 -> 1.50 pts  (13 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 22,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 87,
+      "lead_id": "L088",
+      "name": "Iris Monroe",
+      "company": "Corporate Training",
+      "industry": "EdTech",
+      "company_size": 110,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2023-12-17",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "EdTech label with no physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 3,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 0.6
+      },
+      "final_score": 4.5,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Iris Monroe, Corporate Training (110 people, EdTech, LinkedIn outreach, 35 days ago)\nScore: 4.5/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"EdTech label with no physical goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (110 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 4/10 -> 0.60 pts  (35 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 89,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L088",
+          "batch": 6,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 88,
+      "lead_id": "L094",
+      "name": "Oliver Thorne",
+      "company": "Museum Management",
+      "industry": "Cultural",
+      "company_size": 65,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2023-12-11",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Cultural sector with little to no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 10,
+        "source": 3,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 2.5,
+        "source": 0.6,
+        "recency": 0.6
+      },
+      "final_score": 4.5,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Oliver Thorne, Museum Management (65 people, Cultural, LinkedIn outreach, 41 days ago)\nScore: 4.5/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Cultural sector with little to no physical-goods operations.\"\n  Company size (25%): 10/10 -> 2.50 pts  (65 employees, target range)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 4/10 -> 0.60 pts  (41 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 95,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L094",
+          "batch": 7,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 89,
+      "lead_id": "L004",
+      "name": "David Moore",
+      "company": "StartupXYZ",
+      "industry": "SaaS",
+      "company_size": 3,
+      "source": "Referral",
+      "last_interaction_date": "2024-01-18",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "SaaS label indicates a software company with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 1,
+        "source": 9,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 0.25,
+        "source": 1.8,
+        "recency": 1.5
+      },
+      "final_score": 4.35,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Company size",
+      "flags": [],
+      "explanation": "Lead: David Moore, StartupXYZ (3 people, SaaS, Referral, 3 days ago)\nScore: 4.35/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"SaaS label indicates a software company with no physical-goods operations.\"\n  Company size (25%): 1/10 -> 0.25 pts  (3 employees, under 10)\n  Lead source  (20%): 9/10 -> 1.80 pts  (Referral)\n  Engagement   (15%): 10/10 -> 1.50 pts  (3 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 5,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 90,
+      "lead_id": "L096",
+      "name": "Quinn Murphy",
+      "company": "Volunteer Management",
+      "industry": "NonProfit",
+      "company_size": 40,
+      "source": "Webinar attendee",
+      "last_interaction_date": "2023-12-09",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "NonProfit label with no physical-goods operations indicated.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 6,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.2,
+        "recency": 0.6
+      },
+      "final_score": 4.35,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Quinn Murphy, Volunteer Management (40 people, NonProfit, Webinar attendee, 43 days ago)\nScore: 4.35/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"NonProfit label with no physical-goods operations indicated.\"\n  Company size (25%): 7/10 -> 1.75 pts  (40 employees, a little small)\n  Lead source  (20%): 6/10 -> 1.20 pts  (Webinar attendee)\n  Engagement   (15%): 4/10 -> 0.60 pts  (43 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 97,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L096",
+          "batch": 7,
+          "attempts": 2
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 91,
+      "lead_id": "L052",
+      "name": "Yasmine Aziz",
+      "company": "Pet Care Services",
+      "industry": "Consumer Services",
+      "company_size": 28,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-02",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Consumer services with little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 3,
+        "recency": 7
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 0.6,
+        "recency": 1.05
+      },
+      "final_score": 4.2,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Yasmine Aziz, Pet Care Services (28 people, Consumer Services, LinkedIn outreach, 19 days ago)\nScore: 4.2/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Consumer services with little physical-goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (28 employees, a little small)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 7/10 -> 1.05 pts  (19 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 53,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L052",
+          "batch": 3,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 92,
+      "lead_id": "L091",
+      "name": "Louisa Blake",
+      "company": "Interior Design Services",
+      "industry": "Services",
+      "company_size": 28,
+      "source": "Content download",
+      "last_interaction_date": "2023-12-14",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Interior design services do not involve physical goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 5,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.0,
+        "recency": 0.6
+      },
+      "final_score": 4.15,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Louisa Blake, Interior Design Services (28 people, Services, Content download, 38 days ago)\nScore: 4.15/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Interior design services do not involve physical goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (28 employees, a little small)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 4/10 -> 0.60 pts  (38 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 92,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L091",
+          "batch": 7,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 93,
+      "lead_id": "L018",
+      "name": "Rachel Kim",
+      "company": "Government Agency",
+      "industry": "Government",
+      "company_size": 800,
+      "source": "Content download",
+      "last_interaction_date": "2023-12-10",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Government label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 7,
+        "source": 5,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.75,
+        "source": 1.0,
+        "recency": 0.6
+      },
+      "final_score": 4.15,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Rachel Kim, Government Agency (800 people, Government, Content download, 42 days ago)\nScore: 4.15/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Government label indicates little physical-goods operations.\"\n  Company size (25%): 7/10 -> 1.75 pts  (800 employees, a little large)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 4/10 -> 0.60 pts  (42 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 19,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 94,
+      "lead_id": "L016",
+      "name": "Pamela White",
+      "company": "Pharma Research Inc",
+      "industry": "Pharmaceuticals",
+      "company_size": 2200,
+      "source": "Sales call",
+      "last_interaction_date": "2023-11-25",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Pharmaceuticals label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 4,
+        "source": 8,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.0,
+        "source": 1.6,
+        "recency": 0.6
+      },
+      "final_score": 4.0,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Pamela White, Pharma Research Inc (2,200 people, Pharmaceuticals, Sales call, 57 days ago)\nScore: 4/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Pharmaceuticals label indicates little physical-goods operations.\"\n  Company size (25%): 4/10 -> 1.00 pts  (2200 employees, too large for a standard deal)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 4/10 -> 0.60 pts  (57 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 17,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 95,
+      "lead_id": "L032",
+      "name": "Fiona Murphy",
+      "company": "Telecommunications",
+      "industry": "Telecom",
+      "company_size": 2500,
+      "source": "Sales call",
+      "last_interaction_date": "2023-11-15",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Telecom label and name suggest a business with little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 4,
+        "source": 8,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.0,
+        "source": 1.6,
+        "recency": 0.6
+      },
+      "final_score": 4.0,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Fiona Murphy, Telecommunications (2,500 people, Telecom, Sales call, 67 days ago)\nScore: 4/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Telecom label and name suggest a business with little physical-goods operations.\"\n  Company size (25%): 4/10 -> 1.00 pts  (2500 employees, too large for a standard deal)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 4/10 -> 0.60 pts  (67 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 33,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L032",
+          "batch": 1,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 96,
+      "lead_id": "L043",
+      "name": "Quincy Adams",
+      "company": "Streaming Service",
+      "industry": "Media",
+      "company_size": 3000,
+      "source": "Sales call",
+      "last_interaction_date": "2023-10-30",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Media industry has little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 4,
+        "source": 8,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.0,
+        "source": 1.6,
+        "recency": 0.6
+      },
+      "final_score": 4.0,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Quincy Adams, Streaming Service (3,000 people, Media, Sales call, 83 days ago)\nScore: 4/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Media industry has little physical-goods operations.\"\n  Company size (25%): 4/10 -> 1.00 pts  (3000 employees, too large for a standard deal)\n  Lead source  (20%): 8/10 -> 1.60 pts  (Sales call)\n  Engagement   (15%): 4/10 -> 0.60 pts  (83 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 44,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L043",
+          "batch": 2,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 97,
+      "lead_id": "L003",
+      "name": "Carol Singh",
+      "company": "National Bank Corp",
+      "industry": "Finance",
+      "company_size": 5000,
+      "source": "Content download",
+      "last_interaction_date": "2023-12-01",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Finance label indicates a company with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 4,
+        "source": 5,
+        "recency": 4
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.0,
+        "source": 1.0,
+        "recency": 0.6
+      },
+      "final_score": 3.4,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Industry fit",
+      "flags": [],
+      "explanation": "Lead: Carol Singh, National Bank Corp (5,000 people, Finance, Content download, 51 days ago)\nScore: 3.4/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Finance label indicates a company with no physical-goods operations.\"\n  Company size (25%): 4/10 -> 1.00 pts  (5000 employees, too large for a standard deal)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 4/10 -> 0.60 pts  (51 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 4,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 98,
+      "lead_id": "L034",
+      "name": "Hassan Khalil",
+      "company": "Oil & Gas Corp",
+      "industry": "Energy",
+      "company_size": 8000,
+      "source": "Content download",
+      "last_interaction_date": "2023-09-01",
+      "tier": "hard",
+      "confidence": "medium",
+      "industry_reason": "Energy label, but the name suggests significant physical operations in oil and gas.",
+      "factor_scores": {
+        "industry": 5,
+        "size": 1,
+        "source": 5,
+        "recency": 1
+      },
+      "factor_points": {
+        "industry": 2.0,
+        "size": 0.25,
+        "source": 1.0,
+        "recency": 0.15
+      },
+      "final_score": 3.4,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Company size and Engagement",
+      "flags": [],
+      "explanation": "Lead: Hassan Khalil, Oil & Gas Corp (8,000 people, Energy, Content download, 142 days ago)\nScore: 3.4/10  Decision: REJECTED\n  Industry fit (40%): 5/10 -> 2.00 pts  \"Energy label, but the name suggests significant physical operations in oil and gas.\"\n  Company size (25%): 1/10 -> 0.25 pts  (8000 employees, over 5,000)\n  Lead source  (20%): 5/10 -> 1.00 pts  (Content download)\n  Engagement   (15%): 1/10 -> 0.15 pts  (142 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 35,
+        "notes": [],
+        "industry": {
+          "source": "llm",
+          "request_id": "L034",
+          "batch": 1,
+          "attempts": 1
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 99,
+      "lead_id": "L002",
+      "name": "Bob Rodriguez",
+      "company": "TechVentures Inc",
+      "industry": "SaaS",
+      "company_size": 8,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2024-01-20",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "SaaS label indicates a software company with no physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 1,
+        "source": 3,
+        "recency": 10
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 0.25,
+        "source": 0.6,
+        "recency": 1.5
+      },
+      "final_score": 3.15,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Company size",
+      "flags": [],
+      "explanation": "Lead: Bob Rodriguez, TechVentures Inc (8 people, SaaS, LinkedIn outreach, 1 days ago)\nScore: 3.15/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"SaaS label indicates a software company with no physical-goods operations.\"\n  Company size (25%): 1/10 -> 0.25 pts  (8 employees, under 10)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 10/10 -> 1.50 pts  (1 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 3,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    },
+    {
+      "rank": 100,
+      "lead_id": "L015",
+      "name": "Olivia Garcia",
+      "company": "Local Restaurant Group",
+      "industry": "Hospitality",
+      "company_size": 12,
+      "source": "LinkedIn outreach",
+      "last_interaction_date": "2023-08-30",
+      "tier": "none",
+      "confidence": "high",
+      "industry_reason": "Hospitality label indicates little physical-goods operations.",
+      "factor_scores": {
+        "industry": 2,
+        "size": 4,
+        "source": 3,
+        "recency": 1
+      },
+      "factor_points": {
+        "industry": 0.8,
+        "size": 1.0,
+        "source": 0.6,
+        "recency": 0.15
+      },
+      "final_score": 2.55,
+      "decision": "rejected",
+      "priority": null,
+      "priority_rank": null,
+      "rules_applied": [],
+      "rejection_reason": "Engagement",
+      "flags": [],
+      "explanation": "Lead: Olivia Garcia, Local Restaurant Group (12 people, Hospitality, LinkedIn outreach, 144 days ago)\nScore: 2.55/10  Decision: REJECTED\n  Industry fit (40%): 2/10 -> 0.80 pts  \"Hospitality label indicates little physical-goods operations.\"\n  Company size (25%): 4/10 -> 1.00 pts  (12 employees, too small)\n  Lead source  (20%): 3/10 -> 0.60 pts  (LinkedIn outreach)\n  Engagement   (15%): 1/10 -> 0.15 pts  (144 days since contact)",
+      "message": null,
+      "trace": {
+        "source_row": 16,
+        "notes": [],
+        "industry": {
+          "source": "cache",
+          "request_id": null,
+          "batch": null,
+          "attempts": 0
+        },
+        "message": null
+      }
+    }
+  ],
+  "priority_queue": [
+    "L046",
+    "L045",
+    "L068",
+    "L071",
+    "L087",
+    "L093",
+    "L099",
+    "L005",
+    "L067",
+    "L074",
+    "L049",
+    "L023",
+    "L027",
+    "L082",
+    "L097",
+    "L053",
+    "L007",
+    "L050",
+    "L065",
+    "L075",
+    "L041"
+  ],
+  "sample_messages": [
+    {
+      "variant": "warm_followup",
+      "subject": "Following up on your demo request",
+      "body": "Hi Sophia,\n\nThanks for your demo request regarding OpsFlow. At Wine Distribution, managing inventory and ensuring timely deliveries can be challenging. Our software aims to simplify these processes for retail businesses.\n\nIf you're interested, I can walk you through a short demo. Would a 15-minute call next week work for you? No worries if the timing isn’t right.\n\nBest regards,\nThe OpsFlow Team",
+      "word_count": 63,
+      "lead_id": "L046",
+      "company": "Wine Distribution",
+      "priority_rank": 1
+    },
+    {
+      "variant": "warm_followup",
+      "subject": "Following up on your referral",
+      "body": "Hi Steven,\n\nThanks for connecting with us through a referral. It’s great to meet someone from Robotics Company. OpsFlow helps manufacturing teams streamline operations, especially around inventory and supply chain visibility.\n\nIf you’re interested, I can walk you through a short demo. Would a 15-minute call next week suit you? No worries if the timing isn't right.\n\nBest regards,\nThe OpsFlow Team",
+      "word_count": 62,
+      "lead_id": "L045",
+      "company": "Robotics Company",
+      "priority_rank": 2
+    },
+    {
+      "variant": "warm_followup",
+      "subject": "Following up on your referral",
+      "body": "Hi Oscar,\n\nThanks for connecting with us through a referral. It's good to meet the team at Warehouse Automation. OpsFlow helps logistics companies improve inventory and fleet visibility, reducing delays and improving efficiency.\n\nIf it would be useful, I can show you a short demo. Would a 15-minute call sometime next week work for you? No worries if the timing isn't right.\n\nBest regards,\nThe OpsFlow Team",
+      "word_count": 67,
+      "lead_id": "L068",
+      "company": "Warehouse Automation",
+      "priority_rank": 3
+    },
+    {
+      "variant": "value_led",
+      "subject": "Thanks for your interest in OpsFlow",
+      "body": "Hi Ruby,\n\nThanks for our recent conversation. I appreciate your interest in Sustainable Fashion. Many retailers face challenges with stockouts and manual processes, and OpsFlow can help streamline these operations.\n\nWould you like a short overview of our solution, or would a quick call be easier? No pressure either way.\n\nBest regards,\nThe OpsFlow Team",
+      "word_count": 55,
+      "lead_id": "L071",
+      "company": "Sustainable Fashion",
+      "priority_rank": 4
+    },
+    {
+      "variant": "reengagement",
+      "subject": "Checking in from OpsFlow",
+      "body": "Hi Harper,\n\nIt’s been a little while since you requested a demo, so I wanted to check in. OpsFlow provides valuable inventory tracking that can enhance visibility and efficiency in retail operations.\n\nIf you’re still interested, would a quick 15-minute call in the next couple of weeks be useful? If you'd rather not hear from us, just let me know.\n\nBest regards,\nThe OpsFlow Team",
+      "word_count": 65,
+      "lead_id": "L087",
+      "company": "Retail Inventory",
+      "priority_rank": 5
+    }
+  ],
+  "errors": [],
+  "telemetry": {
+    "stages": [
+      {
+        "name": "ingest",
+        "duration_s": 0.0025,
+        "items": 100
+      },
+      {
+        "name": "rules",
+        "duration_s": 0.0006,
+        "items": 100
+      },
+      {
+        "name": "industry",
+        "duration_s": 36.4574,
+        "items": 100
+      },
+      {
+        "name": "decide",
+        "duration_s": 0.0055,
+        "items": 100
+      },
+      {
+        "name": "messages",
+        "duration_s": 20.7834,
+        "items": 21
+      }
+    ],
+    "industry": {
+      "batches": 8,
+      "batch_sizes": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        10,
+        1
+      ],
+      "api_calls": 12,
+      "validation_retries": 4,
+      "usage": {
+        "requests": 12,
+        "transient_failures": 0,
+        "retries": 0,
+        "failed_calls": 0,
+        "latency_s": 36.438658,
+        "prompt_tokens": 17343,
+        "completion_tokens": 2743
+      }
+    },
+    "messages": {
+      "batches": 3,
+      "batch_sizes": [
+        10,
+        10,
+        1
+      ],
+      "api_calls": 5,
+      "validation_retries": 2,
+      "usage": {
+        "requests": 5,
+        "transient_failures": 0,
+        "retries": 0,
+        "failed_calls": 0,
+        "latency_s": 20.756006,
+        "prompt_tokens": 10372,
+        "completion_tokens": 2150
+      }
+    },
+    "llm_total": {
+      "requests": 17,
+      "transient_failures": 0,
+      "retries": 0,
+      "failed_calls": 0,
+      "latency_s": 57.194664,
+      "prompt_tokens": 27715,
+      "completion_tokens": 4893
+    },
+    "cache_hits": 29,
+    "log": {
+      "warnings": 6,
+      "errors": 0
+    },
+    "log_file": "run.log"
+  },
+  "validation": {
+    "passed": true,
+    "checks": [
+      {
+        "name": "input_rows_accounted_for",
+        "passed": true,
+        "detail": "100 rows read = 100 kept + 0 dropped"
+      },
+      {
+        "name": "every_lead_scored_by_every_rule",
+        "passed": true,
+        "detail": "100 leads x rules ['recency', 'size', 'source']"
+      },
+      {
+        "name": "every_lead_has_an_industry_answer",
+        "passed": true,
+        "detail": "100 answers"
+      },
+      {
+        "name": "every_lead_decided_exactly_once",
+        "passed": true,
+        "detail": "100 decisions"
+      },
+      {
+        "name": "weights_add_up_to_one",
+        "passed": true,
+        "detail": "weights {'industry': 0.4, 'size': 0.25, 'source': 0.2, 'recency': 0.15}"
+      },
+      {
+        "name": "scores_are_in_range",
+        "passed": true,
+        "detail": "all scores 1-10"
+      },
+      {
+        "name": "points_add_up_to_final_scores",
+        "passed": true,
+        "detail": "points = score for every lead"
+      },
+      {
+        "name": "ranking_is_ordered",
+        "passed": true,
+        "detail": "ranks 1..N, scores never increase"
+      },
+      {
+        "name": "priority_ranks_are_contiguous",
+        "passed": true,
+        "detail": "21 qualified leads ranked 1..21"
+      },
+      {
+        "name": "decisions_follow_the_rules",
+        "passed": true,
+        "detail": "thresholds, caps and forced review all hold"
+      },
+      {
+        "name": "decision_counts_add_up",
+        "passed": true,
+        "detail": "{'qualified': 21, 'review': 59, 'rejected': 20}"
+      },
+      {
+        "name": "llm_calls_are_batched",
+        "passed": true,
+        "detail": "17 calls for 100 leads, never one call per lead"
+      },
+      {
+        "name": "messages_cover_qualified_leads",
+        "passed": true,
+        "detail": "21 written + 0 failed = 21 qualified"
+      },
+      {
+        "name": "messages_pass_the_rules_again",
+        "passed": true,
+        "detail": "21 messages re-checked"
+      },
+      {
+        "name": "every_lead_is_traceable",
+        "passed": true,
+        "detail": "CSV row, industry source and message trace on every lead"
+      },
+      {
+        "name": "failures_are_all_reported",
+        "passed": true,
+        "detail": "every fallback and failed message is in errors"
+      },
+      {
+        "name": "no_secrets_in_report",
+        "passed": true,
+        "detail": "no API key in the report"
+      },
+      {
+        "name": "run_log_matches_the_run",
+        "passed": true,
+        "detail": "run.log has run=20261025T121422Z-cac5e0 and every stage's start and end"
+      }
+    ]
+  }
+}
