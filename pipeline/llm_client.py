@@ -57,6 +57,26 @@ class RetryPolicy(BaseModel):
             raise ConfigError(f"config llm.retries is invalid: {details}") from exc
 
 
+class LLMUsage(BaseModel):
+    """What a client has spent so far. Counters only ever grow; subtract two snapshots to get
+    the usage of one stage."""
+
+    requests: int = Field(default=0, ge=0)  # calls that returned a reply
+    transient_failures: int = Field(default=0, ge=0)  # rate limits, timeouts, server errors seen
+    retries: int = Field(default=0, ge=0)  # times a call was sent again after one of those
+    failed_calls: int = Field(default=0, ge=0)  # calls given up on (retries used up, or not retryable)
+    latency_s: float = Field(default=0.0, ge=0)  # time spent waiting on replies
+    prompt_tokens: int = Field(default=0, ge=0)
+    completion_tokens: int = Field(default=0, ge=0)
+
+    def minus(self, earlier: "LLMUsage") -> "LLMUsage":
+        """The usage since `earlier` (a copy taken with model_copy)."""
+        now, before = self.model_dump(), earlier.model_dump()
+        diff = {name: now[name] - before[name] for name in now}
+        diff["latency_s"] = round(diff["latency_s"], 6)
+        return LLMUsage(**diff)
+
+
 class LLMAPIClient(ABC):
     """One connection to an LLM provider, asked for JSON text."""
 
@@ -67,6 +87,7 @@ class LLMAPIClient(ABC):
     ) -> None:
         self.retry_policy = retry_policy or RetryPolicy()
         self._sleep = sleep
+        self.usage = LLMUsage()
 
     @classmethod
     @abstractmethod
@@ -92,15 +113,29 @@ class LLMAPIClient(ABC):
         """Ask for a JSON reply, retrying transient failures with exponential backoff."""
         policy = self.retry_policy
         for attempt in range(1, policy.max_attempts + 1):
+            started = time.perf_counter()
             try:
-                return self._request(system_prompt, user_prompt, temperature, max_tokens)
+                reply = self._request(system_prompt, user_prompt, temperature, max_tokens)
             except LLMTransientError as exc:
+                self.usage.latency_s += time.perf_counter() - started
+                self.usage.transient_failures += 1
                 if attempt == policy.max_attempts:
+                    self.usage.failed_calls += 1
                     raise
                 backoff = policy.base_delay_s * 2 ** (attempt - 1) + random.uniform(0, policy.base_delay_s)
                 delay = max(min(backoff, policy.max_delay_s), exc.retry_after or 0.0)
                 log.warning("LLM call failed (%s); retry %d of %d in %.1fs", exc, attempt, policy.max_attempts - 1, delay)
+                self.usage.retries += 1
                 self._sleep(delay)
+            except LLMError:
+                self.usage.latency_s += time.perf_counter() - started
+                self.usage.failed_calls += 1
+                raise
+            else:
+                self.usage.latency_s += time.perf_counter() - started
+                self.usage.requests += 1
+                log.debug("LLM reply received in %.2fs (attempt %d)", time.perf_counter() - started, attempt)
+                return reply
         raise AssertionError("unreachable")  # the loop always returns or raises
 
 
@@ -183,6 +218,9 @@ class OpenAIClient(LLMAPIClient):
             raise LLMTransientError(f"OpenAI server error ({exc.status_code})", _retry_after(exc)) from exc
         except openai.APIError as exc:
             raise LLMError(f"OpenAI request failed: {exc}") from exc
+        usage = getattr(response, "usage", None)
+        self.usage.prompt_tokens += int(getattr(usage, "prompt_tokens", 0) or 0)
+        self.usage.completion_tokens += int(getattr(usage, "completion_tokens", 0) or 0)
         if not response.choices:
             raise LLMTransientError("OpenAI returned no choices")
         return response.choices[0].message.content or ""

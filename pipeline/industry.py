@@ -21,7 +21,16 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 from pipeline.config import ConfigError, config_error, parse_count, parse_number
 from pipeline.llm_client import LLMAPIClient, LLMAuthError, LLMError, extract_json
-from pipeline.models import IndustryItem, IndustryResponse, IndustryResult, IndustryScoring, Lead, LeadPayload
+from pipeline.models import (
+    IndustryItem,
+    IndustryProvenance,
+    IndustryResponse,
+    IndustryResult,
+    IndustryScoring,
+    Issue,
+    Lead,
+    LeadPayload,
+)
 from pipeline.prompts import TIER_ORDER, build_industry_system_prompt, build_industry_user_prompt
 
 log = logging.getLogger(__name__)
@@ -241,6 +250,8 @@ class IndustryScorer:
             if cached is not None:
                 by_group[key] = cached
                 scoring.cache_hits += len(members)
+                for member in members:
+                    scoring.provenance[member.lead_id] = IndustryProvenance(source="cache", request_id=None)
                 continue
             requests[representative.lead_id] = LeadPayload.from_lead(representative)
             owner[representative.lead_id] = key
@@ -248,10 +259,15 @@ class IndustryScorer:
         # Sorted by lead_id so row order never changes which leads share a batch.
         ordered = sorted(requests)
         size = self.settings.batch_size
+        total_batches = -(-len(ordered) // size)
+        log.info(
+            "industry fit: %d lead(s), %d unique request(s), %d answered from cache; %d batch(es) of up to %d",
+            len(leads), len(requests), scoring.cache_hits, total_batches, size,
+        )
         try:
-            for start in range(0, len(ordered), size):
+            for number, start in enumerate(range(0, len(ordered), size), start=1):
                 batch = {lead_id: requests[lead_id] for lead_id in ordered[start : start + size]}
-                for lead_id, result in self._score_batch(batch, scoring).items():
+                for lead_id, result in self._score_batch(batch, scoring, number, total_batches).items():
                     by_group[owner[lead_id]] = result
                     self.cache.put(owner[lead_id], result)
         finally:
@@ -259,22 +275,44 @@ class IndustryScorer:
 
         for key, members in groups.items():
             template = by_group[key]
+            representative = members[0].lead_id
             for lead in members:
                 result = template.model_copy(update={"lead_id": lead.lead_id})
                 scoring.results[lead.lead_id] = result
+                if lead.lead_id != representative and representative in scoring.provenance:
+                    shared = scoring.provenance[representative]
+                    scoring.provenance[lead.lead_id] = shared.model_copy(update={"request_id": representative})
                 if result.llm_failed:
                     scoring.failed_ids.append(lead.lead_id)
+        for lead_id in scoring.failed_ids:
+            scoring.issues.append(
+                Issue(stage="industry", kind="fell_back_to_review", lead_id=lead_id,
+                      detail="the model gave no usable industry answer, so the lead goes to review")
+            )
+        log.info(
+            "industry fit done: %d lead(s), %d API call(s), %d validation re-ask(s), %d fell back to review",
+            len(scoring.results), scoring.api_calls, scoring.validation_retries, len(scoring.failed_ids),
+        )
         return scoring
 
-    def _score_batch(self, batch: dict[str, LeadPayload], scoring: IndustryScoring) -> dict[str, IndustryResult]:
+    def _score_batch(
+        self, batch: dict[str, LeadPayload], scoring: IndustryScoring, number: int, total: int
+    ) -> dict[str, IndustryResult]:
         settings = self.settings
         good: dict[str, IndustryResult] = {}
         clamped: dict[str, IndustryResult] = {}
         pending = dict(batch)
+        attempts = {lead_id: 0 for lead_id in batch}
         repair = False
+        scoring.batch_sizes.append(len(batch))
+        log.info("industry batch %d/%d: %d lead(s)", number, total, len(batch))
         for attempt in range(1 + settings.validation_retries):
             if not pending:
                 break
+            if attempt:
+                scoring.validation_retries += 1
+            for lead_id in pending:
+                attempts[lead_id] += 1
             user_prompt = build_industry_user_prompt([p.model_dump() for p in pending.values()], repair=repair)
             scoring.api_calls += 1
             try:
@@ -287,12 +325,18 @@ class IndustryScorer:
                 raise
             except LLMError as exc:
                 log.warning("LLM call failed for %d lead(s) after retries: %s", len(pending), exc)
+                scoring.issues.append(
+                    Issue(stage="industry", kind="llm_call_failed", detail=f"batch {number}: {exc}")
+                )
                 break  # transport retries are already used up; fall back for what is left
             try:
                 items = IndustryResponse.model_validate(extract_json(raw)).results
                 repair = False
             except (ValueError, ValidationError) as exc:  # not JSON, or no "results" list
                 log.warning("LLM reply was not usable (%s); retrying %d lead(s)", str(exc).splitlines()[0], len(pending))
+                scoring.issues.append(
+                    Issue(stage="industry", kind="unusable_reply", detail=f"batch {number}, ask {attempt + 1}: {str(exc).splitlines()[0]}")
+                )
                 repair = True
                 continue
             for item in items:
@@ -311,8 +355,17 @@ class IndustryScorer:
         for lead_id in pending:
             if lead_id in clamped:
                 log.warning("score for %s was outside its tier range; clamped", lead_id)
+                scoring.issues.append(
+                    Issue(stage="industry", kind="score_clamped", lead_id=lead_id,
+                          detail="the score was outside its tier's range after every retry, so it was clamped into the range")
+                )
                 good[lead_id] = clamped[lead_id]
             else:
                 log.warning("industry scoring failed for %s; falling back to review", lead_id)
                 good[lead_id] = _fallback(lead_id)
+        for lead_id, result in good.items():
+            scoring.provenance[lead_id] = IndustryProvenance(
+                source="fallback" if result.llm_failed else "llm", request_id=lead_id, batch=number,
+                attempts=attempts[lead_id],
+            )
         return good

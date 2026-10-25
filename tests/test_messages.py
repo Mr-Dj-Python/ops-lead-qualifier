@@ -497,3 +497,38 @@ def test_cli_uses_the_default_sign_off_without_sender_name(tmp_path, monkeypatch
          "--env-file", str(env_file), "--score-industry", "--messages"]
     ) == 0
     assert "Best regards,\nThe OpsFlow Team" in capsys.readouterr().out
+
+
+# --- traceability and telemetry of the stage ----------------------------------------------------
+
+def test_message_provenance_records_batch_attempts_and_variant(settings):
+    leads = [make_lead(f"L{n:03d}", company=f"Company {chr(64 + n)}") for n in range(1, 13)]
+    run = write(MessageClient(), settings, leads)
+    assert run.batch_sizes == [10, 2] and run.validation_retries == 0 and run.issues == []
+    assert run.provenance["L001"].model_dump() == {"status": "written", "variant": "warm_followup", "batch": 1, "attempts": 1}
+    assert run.provenance["L011"].batch == 2 and len(run.provenance) == 12
+
+
+def test_a_reask_shows_in_the_attempts_and_the_run_counter(settings):
+    leads = [make_lead("L001"), make_lead("L002", company="Beta Freight")]
+    client = MessageClient([lambda prompt: reply(payloads_in(prompt)[:1])])
+    run = write(client, settings, leads)
+    assert run.validation_retries == 1
+    assert (run.provenance["L001"].attempts, run.provenance["L002"].attempts) == (1, 2)
+
+
+def test_a_failed_message_has_a_failed_provenance_and_an_issue_with_the_reasons(settings):
+    bad = lambda prompt: reply(payloads_in(prompt), body="Hi there, buy now!")
+    run = write(MessageClient([bad, bad, bad]), settings, [make_lead()])
+    assert run.provenance["L001"].model_dump() == {"status": "failed", "variant": "warm_followup", "batch": 1, "attempts": 3}
+    assert run.validation_retries == 2
+    issue = run.issues[-1]
+    assert (issue.stage, issue.kind, issue.lead_id) == ("messages", "message_failed", "L001")
+    assert "exclamation" in issue.detail
+
+
+def test_transport_failures_and_unusable_replies_are_issues(settings):
+    run = write(MessageClient([LLMError("provider is down")]), settings, [make_lead()])
+    assert [i.kind for i in run.issues] == ["llm_call_failed", "message_failed"]
+    run = write(MessageClient(["not json", "{}", "{}"]), settings, [make_lead()])
+    assert [i.kind for i in run.issues].count("unusable_reply") == 3

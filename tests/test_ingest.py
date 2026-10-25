@@ -234,3 +234,16 @@ def test_cli_rejects_bad_reference_date(capsys):
 def test_cli_missing_config(capsys):
     assert main(["--input", str(DATA / "leads_training.csv"), "--config", "nope.yaml"]) == 1
     assert "config file not found" in capsys.readouterr().err
+
+
+def test_each_lead_remembers_its_line_in_the_csv(tmp_path):
+    body = "Ann,Co,10,SaaS,Referral,2024-01-01\nNA,NA,10,SaaS,Referral,2024-01-01\nBo,Co2,10,SaaS,Referral,2024-01-01\n"
+    leads = ingest_csv(write_csv(tmp_path, body), reference_date=REFERENCE, missing_values=MISSING).leads
+    assert [(lead.name, lead.source_row) for lead in leads] == [("Ann", 2), ("Bo", 4)]  # the dropped row 3 is skipped
+
+
+def test_source_rows_point_at_the_right_line_in_the_provided_files():
+    for filename in ("leads_training.csv", "leads_full_scale_100.csv", "leads_testing.csv"):
+        lines = (DATA / filename).read_text().splitlines()
+        for lead in ingest(DATA / filename).leads:
+            assert (lead.company or lead.name) in lines[lead.source_row - 1]

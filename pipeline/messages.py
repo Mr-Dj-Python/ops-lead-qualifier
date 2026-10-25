@@ -20,7 +20,9 @@ from pipeline.models import (
     GeneratedMessage,
     Lead,
     LeadDecision,
+    Issue,
     MessageItem,
+    MessageProvenance,
     MessageRun,
     MessagePayload,
     MessageResponse,
@@ -181,12 +183,18 @@ class MessageGenerator:
         qualified = [by_id[d.lead_id] for d in decisions if d.decision == "qualified"]
         run = MessageRun(messages={})
         size = self.settings.batch_size
-        for start in range(0, len(qualified), size):
+        total = -(-len(qualified) // size)
+        log.info("messages: %d qualified lead(s), %d batch(es) of up to %d", len(qualified), total, size)
+        for number, start in enumerate(range(0, len(qualified), size), start=1):
             batch = qualified[start : start + size]
-            self._write_batch(batch, reference_date, run)
+            self._write_batch(batch, reference_date, run, number, total)
+        log.info(
+            "messages done: %d written, %d without a valid message, %d API call(s), %d validation re-ask(s)",
+            len(run.messages), len(run.failed_ids), run.api_calls, run.validation_retries,
+        )
         return run
 
-    def _write_batch(self, batch: list[Lead], reference_date: date, run: MessageRun) -> None:
+    def _write_batch(self, batch: list[Lead], reference_date: date, run: MessageRun, number: int, total: int) -> None:
         settings = self.settings
         payloads: dict[str, MessagePayload] = {}
         rules: dict[str, MessageRules] = {}
@@ -203,11 +211,18 @@ class MessageGenerator:
             )
 
         pending = dict(payloads)
+        attempts = {lead_id: 0 for lead_id in payloads}
         problems: dict[str, str] = {}
         repair = False
+        run.batch_sizes.append(len(batch))
+        log.info("message batch %d/%d: %d lead(s)", number, total, len(batch))
         for attempt in range(1 + settings.validation_retries):
             if not pending:
                 break
+            if attempt:
+                run.validation_retries += 1
+            for lead_id in pending:
+                attempts[lead_id] += 1
             prompt = build_message_user_prompt(
                 [p.model_dump() for p in pending.values()], problems=problems or None, repair=repair
             )
@@ -222,12 +237,16 @@ class MessageGenerator:
                 raise
             except LLMError as exc:
                 log.warning("LLM call failed for %d message(s) after retries: %s", len(pending), exc)
+                run.issues.append(Issue(stage="messages", kind="llm_call_failed", detail=f"batch {number}: {exc}"))
                 break
             try:
                 items = MessageResponse.model_validate(extract_json(raw)).messages
                 repair = False
             except (ValueError, ValidationError) as exc:
                 log.warning("LLM reply was not usable (%s); retrying %d message(s)", str(exc).splitlines()[0], len(pending))
+                run.issues.append(
+                    Issue(stage="messages", kind="unusable_reply", detail=f"batch {number}, ask {attempt + 1}: {str(exc).splitlines()[0]}")
+                )
                 repair = True
                 continue
 
@@ -250,6 +269,9 @@ class MessageGenerator:
                     body=valid.body.replace("\r\n", "\n").strip(), word_count=len(valid.body.split()),
                 )
                 del pending[lead_id]
+                run.provenance[lead_id] = MessageProvenance(
+                    status="written", variant=payloads[lead_id].variant, batch=number, attempts=attempts[lead_id]
+                )
             for lead_id in pending:
                 problems.setdefault(lead_id, NO_REPLY)
             if pending:
@@ -258,3 +280,10 @@ class MessageGenerator:
         for lead_id in pending:
             log.warning("no valid message for %s after retries; the lead keeps its qualified decision", lead_id)
             run.failed_ids.append(lead_id)
+            run.provenance[lead_id] = MessageProvenance(
+                status="failed", variant=payloads[lead_id].variant, batch=number, attempts=attempts[lead_id]
+            )
+            run.issues.append(
+                Issue(stage="messages", kind="message_failed", lead_id=lead_id,
+                      detail=problems.get(lead_id, "no usable reply") + " (no valid message after every retry)")
+            )

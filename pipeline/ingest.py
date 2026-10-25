@@ -7,12 +7,15 @@ raise as well.
 from __future__ import annotations
 
 import csv
+import logging
 from datetime import date
 from pathlib import Path
 
 from pydantic import ValidationError
 
 from pipeline.models import IngestResult, Lead, LeadRow, RowError
+
+log = logging.getLogger(__name__)
 
 REQUIRED_COLUMNS = (
     "name",
@@ -141,7 +144,7 @@ def ingest_csv(
 
     survivors = sorted(kept.values(), key=lambda candidate: candidate["row"])
     leads = [
-        Lead(lead_id=f"L{number:03d}", notes=candidate["notes"], **candidate["values"])
+        Lead(lead_id=f"L{number:03d}", source_row=candidate["row"], notes=candidate["notes"], **candidate["values"])
         for number, candidate in enumerate(survivors, start=1)
     ]
     for lead in leads:
@@ -151,6 +154,14 @@ def ingest_csv(
 
     errors.sort(key=lambda error: error.row)
     result = IngestResult(leads=leads, errors=errors, rows_read=len(rows))
+    for error in errors:
+        log.warning("row %d dropped: %s", error.row, error.reason)
+    for lead in leads:
+        for note in lead.notes:
+            log.warning("%s (row %s): %s", lead.lead_id, lead.source_row, note)
+        for flag in lead.flags:
+            log.info("%s (row %s) flagged %s", lead.lead_id, lead.source_row, flag)
+    log.info("ingest: %d row(s) read, %d lead(s) kept, %d row(s) dropped", len(rows), len(leads), len(errors))
 
     if strict:
         problems = [f"row {e.row}: {e.reason}" for e in errors]
