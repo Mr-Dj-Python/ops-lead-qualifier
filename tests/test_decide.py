@@ -13,6 +13,7 @@ from pipeline.decide import (
     REJECTED,
     REVIEW,
     DecisionSettings,
+    add_flag,
     decide_leads,
     summarize,
 )
@@ -337,6 +338,17 @@ def test_explanation_points_always_add_up_to_the_score(settings):
         result = decide(make_lead(), fit(score=9), settings, rules(size_score, 6, 4))
         listed = [float(line.split("->")[1].split("pts")[0]) for line in result.explanation.splitlines() if "->" in line]
         assert round(sum(listed), 2) == result.final_score
+
+
+def test_add_flag_updates_the_flags_and_the_explanation(settings):
+    result = decide(make_lead(), fit(), settings)
+    assert "Flags:" not in result.explanation
+    add_flag(result, "message_failed")
+    assert result.flags == ["message_failed"] and result.explanation.endswith("  Flags: message_failed")
+    add_flag(result, "message_failed")  # again: nothing changes
+    add_flag(result, "llm_failed")
+    assert result.flags == ["llm_failed", "message_failed"]
+    assert result.explanation.count("Flags:") == 1 and result.explanation.endswith("Flags: llm_failed, message_failed")
 
 
 # --- summary -------------------------------------------------------------------------------

@@ -9,7 +9,8 @@ WEIGHT_RECENCY, referenced from config.yaml); they must add up to 1.
 Runs Stage 1 (ingestion) and Stage 2 (rule scoring). With --score-industry it also runs
 Stage 3 (LLM industry fit, which needs the API key named by llm.api_key_env in .env, in
 batches of LLM_BATCH_SIZE, default 10) and Stage 4 (weighted score, decision and ranking,
-printed from best fit to lowest). Exits with status 1 and a message on stderr if the file, config or API key cannot be used.
+printed from best fit to lowest). Adding --messages also writes a personalised email for each
+qualified lead (Stage 5, same batch size). Exits with status 1 and a message on stderr if the file, config or API key cannot be used.
 """
 from __future__ import annotations
 
@@ -19,10 +20,11 @@ import sys
 from datetime import date
 
 from pipeline.config import ConfigError, load_config, load_env, parse_iso_date
-from pipeline.decide import DecisionSettings, decide_leads, summarize
+from pipeline.decide import DecisionSettings, add_flag, decide_leads, summarize
 from pipeline.industry import IndustryScorer, IndustrySettings
 from pipeline.ingest import IngestError, ingest_csv
 from pipeline.llm_client import LLMAuthError, create_llm_client
+from pipeline.messages import MessageGenerator, MessageSettings
 from pipeline.rules import RuleFactory, score_leads
 
 
@@ -47,6 +49,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--score-industry",
         action="store_true",
         help="also score industry fit with the LLM (needs the API key in .env)",
+    )
+    parser.add_argument(
+        "--messages",
+        action="store_true",
+        help="with --score-industry, also write a first-touch email for each qualified lead",
     )
     parser.add_argument(
         "--explain",
@@ -106,8 +113,32 @@ def print_ranking(decisions, summary, explain: bool) -> None:
             print(d.explanation)
 
 
+def print_messages(decisions, written) -> None:
+    """Each qualified lead's email in priority order, then any lead left without one."""
+    print()
+    print(
+        f"Messages: {len(written.messages)} written ({written.api_calls} API calls), "
+        f"{len(written.failed_ids)} without a valid message"
+    )
+    for d in decisions:
+        message = written.messages.get(d.lead_id)
+        if message is None:
+            continue
+        print()
+        print(f"--- {d.priority} #{d.priority_rank}  {d.lead_id}  {d.company or d.name}  [{message.variant}, {message.word_count} words]")
+        print(f"Subject: {message.subject}")
+        print()
+        print(message.body)
+    if written.failed_ids:
+        print()
+        print("No valid message (a rep should write these): " + ", ".join(written.failed_ids))
+
+
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.messages and not args.score_industry:
+        parser.error("--messages needs --score-industry (messages are written for qualified leads)")
     try:
         env = load_env(args.env_file, required=args.env_file is not None)
         config = load_config(args.config, env=env)
@@ -120,7 +151,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         scorers = RuleFactory.create_all(config["rules"])
         scores = score_leads(result.leads, scorers, reference_date)
-        industry = decisions = summary = None
+        industry = decisions = summary = written = None
         if args.score_industry:
             settings = IndustrySettings.from_config(config)
             decision_settings = DecisionSettings.from_config(config, [scorer.name for scorer in scorers])
@@ -128,6 +159,13 @@ def main(argv: list[str] | None = None) -> int:
             industry = IndustryScorer(client, settings).score(result.leads)
             decisions = decide_leads(result.leads, scores, industry.results, decision_settings, reference_date)
             summary = summarize(decisions, decision_settings)
+            if args.messages:
+                written = MessageGenerator(client, MessageSettings.from_config(config)).generate(
+                    decisions, result.leads, reference_date
+                )
+                for decision in decisions:
+                    if decision.lead_id in written.failed_ids:
+                        add_flag(decision, "message_failed")
     except (ConfigError, IngestError, LLMAuthError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
@@ -155,6 +193,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  fallback leads: {', '.join(industry.failed_ids)}")
     if decisions is not None:
         print_ranking(decisions, summary, args.explain)
+        if written is not None:
+            print_messages(decisions, written)
     elif args.show_scores:
         names = [scorer.name for scorer in scorers]
         print(

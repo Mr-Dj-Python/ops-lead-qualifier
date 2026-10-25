@@ -20,8 +20,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ValidationError
 
-from pipeline.config import ConfigError
-from pipeline.llm_client import LLMAPIClient, LLMAuthError, LLMError
+from pipeline.config import ConfigError, whole_number
+from pipeline.llm_client import LLMAPIClient, LLMAuthError, LLMError, extract_json
 from pipeline.models import IndustryItem, IndustryResponse, IndustryResult, Lead, LeadPayload
 from pipeline.prompts import TIER_ORDER, build_industry_system_prompt, build_industry_user_prompt
 
@@ -72,7 +72,7 @@ class IndustrySettings:
         scoring = llm.get("scoring") if isinstance(llm, dict) else None
         if not isinstance(scoring, dict):
             raise ConfigError("config llm.scoring must be a mapping")
-        batch_size, max_tokens = _whole_number(scoring.get("batch_size")), scoring.get("max_tokens")
+        batch_size, max_tokens = whole_number(scoring.get("batch_size")), scoring.get("max_tokens")
         temperature = scoring.get("temperature")
         if batch_size is None or batch_size < 1:
             raise ConfigError(
@@ -166,30 +166,6 @@ class IndustryCache:
 
 
 # --- parsing and validation ------------------------------------------------------------------
-
-def _extract_json(raw: str):
-    """Parse the reply, tolerating markdown fences and text around the JSON object."""
-    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip(), flags=re.IGNORECASE)
-    try:
-        return json.loads(text)
-    except ValueError:
-        pass
-    start, end = text.find("{"), text.rfind("}")
-    if start != -1 and end > start:
-        return json.loads(text[start : end + 1])
-    raise ValueError("no JSON object found")
-
-
-def _whole_number(value) -> int | None:
-    """An int, or text such as "10" (config values filled in from .env are text)."""
-    if isinstance(value, bool):
-        return None
-    if isinstance(value, int):
-        return value
-    if isinstance(value, str) and re.fullmatch(r"\s*\d+\s*", value):
-        return int(value)
-    return None
-
 
 def _validate_item(
     item, ranges: dict[str, tuple[int, int]]
@@ -291,7 +267,7 @@ class IndustryScorer:
                 log.warning("LLM call failed for %d lead(s) after retries: %s", len(pending), exc)
                 break  # transport retries are already used up; fall back for what is left
             try:
-                items = IndustryResponse.model_validate(_extract_json(raw)).results
+                items = IndustryResponse.model_validate(extract_json(raw)).results
                 repair = False
             except (ValueError, ValidationError) as exc:  # not JSON, or no "results" list
                 log.warning("LLM reply was not usable (%s); retrying %d lead(s)", str(exc).splitlines()[0], len(pending))

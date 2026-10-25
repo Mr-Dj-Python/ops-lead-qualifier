@@ -1,7 +1,8 @@
 """Pydantic models for every record that moves through the pipeline, in order:
 
     CSV row -> LeadRow -> Lead -> RuleResult / LeadPayload -> (LLM) IndustryResponse ->
-    IndustryItem -> IndustryResult -> LeadDecision
+    IndustryItem -> IndustryResult -> LeadDecision -> MessagePayload -> (LLM) MessageResponse ->
+    MessageItem -> GeneratedMessage
 
 A value that fails a model is rejected at the boundary where it appears, with a message that
 names the field, instead of surfacing later as a wrong score. Rules that depend on config or
@@ -17,10 +18,13 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
+from pipeline.message_checks import check_message
+
 Tier = Literal["best", "hard", "none", "unknown"]
 Confidence = Literal["high", "medium", "low"]
 Decision = Literal["qualified", "review", "rejected"]
 Priority = Literal["HIGH", "MEDIUM"]
+Variant = Literal["warm_followup", "value_led", "reengagement"]
 Score = Annotated[int, Field(ge=1, le=10)]
 
 MAX_COMPANY_CHARS = 100
@@ -266,3 +270,62 @@ class LeadDecision(BaseModel):
         if (self.rejection_reason is not None) != (self.decision == "rejected"):
             raise ValueError("rejection_reason is set for rejected leads only")
         return self
+
+
+# --- messages --------------------------------------------------------------------------------
+
+class MessagePayload(BaseModel):
+    """What the model is told about a qualified lead when it writes the email."""
+
+    model_config = ConfigDict(strict=True)
+
+    lead_id: str
+    first_name: str
+    company: str
+    industry: str
+    source: str
+    variant: Variant
+
+
+class MessageResponse(BaseModel):
+    """The reply envelope: {"messages": [...]}. A bare list is accepted too. Items are checked
+    one by one with MessageItem."""
+
+    messages: list[Any]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_a_bare_list(cls, data: Any) -> Any:
+        return {"messages": data} if isinstance(data, list) else data
+
+
+class MessageItem(BaseModel):
+    """One email from the model. Validate with context={"message_rules": MessageRules(...)} to
+    apply every message rule; all problems found are reported together, joined by " | "."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    lead_id: str
+    subject: str = Field(min_length=1)
+    body: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _meets_the_message_rules(self, info: ValidationInfo) -> "MessageItem":
+        rules = (info.context or {}).get("message_rules")
+        if rules is not None:
+            problems = check_message(self.subject, self.body, rules)
+            if problems:
+                raise ValueError(" | ".join(problems))
+        return self
+
+
+class GeneratedMessage(BaseModel):
+    """A message that passed every rule, ready for a rep to send."""
+
+    model_config = ConfigDict(frozen=True, strict=True)
+
+    lead_id: str
+    variant: Variant
+    subject: str = Field(min_length=1)
+    body: str = Field(min_length=1)
+    word_count: int = Field(ge=1)

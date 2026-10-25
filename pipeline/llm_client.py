@@ -7,8 +7,10 @@ a new subclass plus `llm.provider` in config.yaml; retry and backoff are shared 
 """
 from __future__ import annotations
 
+import json
 import logging
 import random
+import re
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -185,6 +187,19 @@ def _retry_after(exc) -> float | None:
         return max(float(exc.response.headers.get("retry-after")), 0.0)
     except (AttributeError, TypeError, ValueError):
         return None
+
+
+def extract_json(raw: str):
+    """Parse the reply, tolerating markdown fences and text around the JSON object."""
+    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip(), flags=re.IGNORECASE)
+    try:
+        return json.loads(text)
+    except ValueError:
+        pass
+    start, end = text.find("{"), text.rfind("}")
+    if start != -1 and end > start:
+        return json.loads(text[start : end + 1])
+    raise ValueError("no JSON object found")
 
 
 def create_llm_client(
