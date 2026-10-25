@@ -55,3 +55,45 @@ missing_values:
   - "unknown"
   - "unknown source"
   - "unknown sector"
+
+# The company the prompts speak for (used to generate the LLM system prompt).
+company:
+  name: "OpsFlow"
+  product: "operations software (inventory tracking, warehouse and fleet visibility, demand and supply planning) to companies that move, make or sell physical goods"
+
+# Industry-fit tiers. The LLM prompt table and the response validator are both built from this,
+# so a score must fall inside its tier's range. Industry lists are the labels seen in the data.
+tiers:
+  best:
+    score_range: [9, 10]
+    industries: [Logistics, Supply Chain, Manufacturing, Retail, Automotive, Trade]
+    description: "Core need: moving and stocking physical goods"
+  hard:
+    score_range: [4, 6]
+    industries: [Construction, Energy, Agriculture, Healthcare, Environmental, Consumer]
+    description: "Some physical operations, but the need is partial, regulated or niche"
+  none:
+    score_range: [1, 3]
+    industries: [Software, SaaS, Cybersecurity, AI/ML, Analytics, Finance, FinTech, Insurance, InsurTech, Cryptocurrency, Media, Entertainment, Telecom, Legal, Consulting, Marketing, Education, Government, NonProfit, Cultural, Hospitality, Events, Sports, Travel, Real Estate, Business Services, Services, Consumer Services, HR Tech, Climate Tech, HealthTech, Biotech, Pharmaceuticals]
+    description: "Little or no physical-goods operations"
+  unknown:
+    score_range: [5, 5]
+    description: "The label and name together do not make the business clear"
+
+# LLM connection (pipeline/llm_client.py). The API key is never written here: it is read from
+# the environment variable named by api_key_env, which you set in .env. To use another
+# provider, register a client for it and change `provider` and `model`.
+llm:
+  provider: openai
+  model: gpt-4o-mini
+  api_key_env: LLM_API_KEY
+  timeout_s: 30
+  retries: {max_attempts: 4, base_delay_s: 2, max_delay_s: 30}   # rate limits, timeouts, 5xx
+  validation_retries: 2   # re-asks for invalid or missing items in a batch
+  scoring: {batch_size: 15, temperature: 0, max_tokens: 1500}
+
+# Earlier industry answers, reused when company, industry and size match. Discarded whenever
+# the model or prompt changes.
+cache:
+  enabled: true
+  path: .cache/industry.json

@@ -189,6 +189,8 @@ All bands live in `config.yaml`, not in code.
   - Timeout or rate limit (429): exponential backoff with jitter.
   - Still failing: mark the lead `review` with reason "LLM scoring failed"; the run continues.
 
+**Implementation:** `pipeline/llm_client.py` defines the provider-neutral `LLMAPIClient` (one call returning JSON text, with shared retry and exponential backoff for rate limits, timeouts and 5xx). OpenAI is the first provider (`OpenAIClient`); another provider such as Claude is one more subclass registered with `@register_provider` plus `llm.provider` and `llm.model` in `config.yaml`. `pipeline/prompts.py` builds the system prompt from `config.yaml` (company and tier table). `pipeline/industry.py` (`IndustryScorer`) batches leads sorted by id, validates every item against the tier score ranges, re-asks only invalid or missing items (`llm.validation_retries`, default 2), clamps an out-of-range score when the tier is valid, and otherwise falls back to tier `unknown`, confidence `low`, `llm_failed` (capped at review in Stage 4). A 401/403 stops the run; answers already received are kept. Identical company, industry and size share one request, and answers are cached in `.cache/industry.json` (discarded when the model or prompt changes). The API key is read from the variable named by `llm.api_key_env` (`LLM_API_KEY` in `.env`). Run with `python main.py --input ... --score-industry`.
+
 ### Stage 4: Decision and ranking (code)
 - `final_score = 0.40*industry + 0.25*size + 0.20*source + 0.15*recency` (range 1-10). The weights live in `.env` (`WEIGHT_INDUSTRY=0.40`, `WEIGHT_SIZE=0.25`, `WEIGHT_SOURCE=0.20`, `WEIGHT_RECENCY=0.15`), and `config.yaml` refers to them as `${WEIGHT_INDUSTRY}` and so on. Edit `.env` to change a weight; no code or YAML edit is needed. A real environment variable with the same name takes priority over `.env`. A missing variable, a non-numeric or negative value, or weights that do not add up to 1 stop the run with an error that names the problem. `.env` is not committed to git, so each checkout needs its own.
 - Thresholds (tune on the test data):
@@ -248,7 +250,7 @@ Also print a short summary in the terminal and write details to `run.log`.
 lead-qualifier/
   main.py            CLI entry (argparse): --input --output --batch-size --reference-date
   config.yaml        weights, bands, thresholds, tier table, model settings
-  pipeline/          ingest.py, rules.py, llm.py, decide.py, messages.py, report.py
+  pipeline/          ingest.py, rules.py, llm_client.py, prompts.py, industry.py, decide.py, messages.py, report.py
   data/              leads_training.csv, leads_testing.csv, leads_full_scale_100.csv
   output_report.json sample output (from the 100-lead file)
   README.md          1 page
