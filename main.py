@@ -110,15 +110,19 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  fallback leads: {', '.join(industry.failed_ids)}")
     if args.show_scores:
         names = [scorer.name for scorer in scorers]
-        extra = f"{'industry':>9}{'  tier':<10}" if industry is not None else ""
-        print("  " + f"{'lead':<6}{'company':<32}" + "".join(f"{name:>9}" for name in names) + extra)
+        extra = f"{'fit':>9}  tier" if industry is not None else ""
+        print(
+            "  " + f"{'lead':<6}{'company':<32}{'industry':<22}"
+            + "".join(f"{name:>9}" for name in names) + extra
+        )
         for lead in result.leads:
             company = (lead.company or lead.name or "")[:30]
             cells = "".join(f"{scores[lead.lead_id][name].score:>9}" for name in names)
             if industry is not None:
                 fit = industry.results[lead.lead_id]
                 cells += f"{fit.industry_fit:>9}  {fit.tier}" + ("*" if fit.caps_at_review else "")
-            print("  " + f"{lead.lead_id:<6}{company:<32}" + cells)
+            label = (lead.industry or "-")[:20]
+            print("  " + f"{lead.lead_id:<6}{company:<32}{label:<22}" + cells)
         if industry is not None:
             print("  (* = capped at review: unknown tier, low confidence or LLM failure)")
     return 0

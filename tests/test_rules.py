@@ -277,6 +277,31 @@ def test_cli_scores_and_shows_table(capsys):
     assert "L001" in out and "source" in out
 
 
+def row_for(out, company):
+    return next(line for line in out.splitlines() if company in line)
+
+
+def test_score_table_shows_each_leads_industry_label(capsys):
+    assert main(["--input", str(ROOT / "data" / "leads_training.csv"), "--show-scores"]) == 0
+    out = capsys.readouterr().out
+    header = next(line for line in out.splitlines() if line.lstrip().startswith("lead "))
+    assert header.split()[:3] == ["lead", "company", "industry"]
+    assert header.split()[-3:] == ["size", "source", "recency"]
+    assert "SaaS" in row_for(out, "CloudScale AI")
+    assert "Logistics" in row_for(out, "Logistics Global")
+
+
+def test_score_table_shows_a_long_industry_label_in_full(capsys):
+    assert main(["--input", str(ROOT / "data" / "leads_testing.csv"), "--show-scores"]) == 0
+    assert "Enterprise Software" in row_for(capsys.readouterr().out, "Global Fortune 500")
+
+
+def test_score_table_marks_a_missing_industry_with_a_dash(capsys):
+    assert main(["--input", str(ROOT / "data" / "leads_testing.csv"), "--show-scores"]) == 0
+    line = row_for(capsys.readouterr().out, "Mysterious Startup")  # label was "Unknown Sector"
+    assert " - " in line
+
+
 def test_cli_reports_invalid_rule_config(tmp_path, capsys):
     text = (ROOT / "config.yaml").read_text().replace("older_score: 1", "older_score: 99")
     path = tmp_path / "config.yaml"

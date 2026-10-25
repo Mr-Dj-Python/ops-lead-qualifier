@@ -465,7 +465,7 @@ def test_cli_scores_industry_and_reports_the_run(cli, config, capsys):
     assert run(RulesClient(config["tiers"]), "--show-scores") == 0
     out = capsys.readouterr().out
     assert "Industry fit: 29 leads scored" in out and "0 fell back to review" in out
-    assert "industry  tier" in out and "(* = capped at review" in out
+    assert "fit  tier" in out and "(* = capped at review" in out
 
 
 def test_cli_reports_fallback_leads(cli, capsys):
