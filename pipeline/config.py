@@ -11,7 +11,7 @@ from typing import Mapping
 import yaml
 from dotenv import dotenv_values
 
-_PLACEHOLDER = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
+_PLACEHOLDER = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}")
 
 
 class ConfigError(Exception):
@@ -45,11 +45,16 @@ def load_env(env_file: str | Path | None = None, required: bool = False) -> dict
 
 
 def _expand(value, env: Mapping[str, str], where: str):
-    """Replace ${NAME} in every string of the loaded YAML with the value of NAME from env."""
+    """Replace ${NAME} in every string of the loaded YAML with the value of NAME from env.
+
+    ${NAME:-fallback} uses `fallback` when NAME is unset or empty; plain ${NAME} must be set.
+    """
     if isinstance(value, str):
 
         def replace(match: re.Match) -> str:
-            name = match.group(1)
+            name, fallback = match.group(1), match.group(2)
+            if fallback is not None:
+                return env.get(name) or fallback
             if name not in env:
                 raise ConfigError(f"config {where} refers to ${{{name}}}, which is not set; add {name} to .env")
             return env[name]

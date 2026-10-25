@@ -82,7 +82,7 @@ Every prompt below is derived from the workflow. Where this document goes beyond
 ### 3.1 Call parameters
 | Setting | Value | Reason |
 |---|---|---|
-| Batch size | 15 leads | About 7 calls for 100 leads; small enough to retry cheaply |
+| Batch size | 10 leads by default (`LLM_BATCH_SIZE` in `.env`) | 10 calls for 100 leads; small enough to retry cheaply. Never one call per lead |
 | Temperature | 0 | Repeatable scores |
 | Output mode | JSON object (or JSON schema if the provider supports it) | Many providers require the top level to be an object, so results are wrapped in `{"results": [...]}` |
 | Max output tokens | 1,500 | About 45 tokens per lead x 15, plus headroom |
@@ -223,7 +223,8 @@ Builds on the Stage 4 override rule in `WORKFLOW.md` (a `none` tier caps the dec
 - `industry_score = industry_fit`
 - Decision cap: `tier in {none, unknown}` **or** `confidence = low` means at most `review`.
 - Hard reject: `tier = none` and size is under 10 or over 5,000.
-- Further caps at `review`: flag `insufficient_data`, or `days_since_contact` over 180 (flag `stale`).
+- Further caps at `review`: flag `insufficient_data`, or `days_since_contact` over 180 (flag `stale`). A cap only applies when the score would have qualified the lead.
+- Forced review: `llm_failed` and `insufficient_data` leads go to `review` even when their score is below the review line (a hard reject still wins).
 - Priority label: `HIGH` at 8.5 and above, `MEDIUM` from 7.0 to 8.49, for qualified leads only.
 
 ### 3.8 Consistency controls (no ground truth, so consistency is the quality measure)
@@ -350,7 +351,7 @@ llm:
   provider: openai          # registered in pipeline/llm_client.py; another provider = another client class
   model: gpt-4o-mini        # pinned; recorded in run_info and in the cache fingerprint
   api_key_env: LLM_API_KEY
-  scoring: {batch_size: 15, temperature: 0, max_tokens: 1500, timeout_s: 30}
+  scoring: {batch_size: "${LLM_BATCH_SIZE:-10}", temperature: 0, max_tokens: 1500}   # 10 unless LLM_BATCH_SIZE is set in .env; the token budget grows with the batch
   messaging: {batch_size: 8, temperature: 0.7, max_tokens: 1800, timeout_s: 30}
   retries: {max_attempts: 4, base_delay_s: 2}
 company: {name: OpsFlow, sender_name: "<rep name>"}
@@ -361,7 +362,7 @@ tiers:
   unknown: {score_range: [5, 5]}
 weights: {industry: ${WEIGHT_INDUSTRY}, size: ${WEIGHT_SIZE}, source: ${WEIGHT_SOURCE}, recency: ${WEIGHT_RECENCY}}   # values live in .env; must sum to 1
 thresholds: {qualified: 7.0, review: 5.0}
-priority: {high: 8.5, medium: 7.0}
+priority: {high: 8.5}   # qualified leads at or above this are HIGH, the rest MEDIUM
 caps: {stale_days: 180, hard_reject_size_below: 10, hard_reject_size_above: 5000}
 missing_values: [na, n/a, null, none, unknown, "", unknown source, unknown sector]
 cache: {enabled: true, path: .cache/industry.json}
@@ -422,4 +423,4 @@ Score: {final}/10  Decision: {DECISION}  [Priority: {HIGH|MEDIUM}]
 ```
 Rules: missing values print as "not provided (scored neutral)"; the four `pts` values must sum to `final` (rounded to 2 decimals) or the build fails a unit test; a weak explanation such as "seems like a good lead" cannot be produced because every line is filled from data.
 
-Worked example (reference date 2024-01-21): Alice Chen, CloudScale AI, 50 people, SaaS, inbound demo request, 6 days ago scores 6.8 and is **Review**: industry fit 2 (0.80 pts), size 10 (2.50), source 10 (2.00), engagement 10 (1.50), capped by the no-fit industry rule. A SaaS vendor would qualify this lead; under this operations-software rubric it does not, and the explanation says why.
+Worked example (reference date 2024-01-21): Alice Chen, CloudScale AI, 50 people, SaaS, inbound demo request, 6 days ago scores 6.8 and is **Review**: industry fit 2 (0.80 pts), size 10 (2.50), source 10 (2.00), engagement 10 (1.50). The explanation says the score is in the review band; a rule line is added only when a rule changed the outcome (for example the no-fit industry cap on a lead scoring 7.2). A SaaS vendor would qualify this lead; under this operations-software rubric it does not, and the explanation says why.

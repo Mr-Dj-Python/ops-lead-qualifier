@@ -90,10 +90,19 @@ llm:
   timeout_s: 30
   retries: {max_attempts: 4, base_delay_s: 2, max_delay_s: 30}   # rate limits, timeouts, 5xx
   validation_retries: 2   # re-asks for invalid or missing items in a batch
-  scoring: {batch_size: 15, temperature: 0, max_tokens: 1500}
+  # Leads per LLM call: LLM_BATCH_SIZE from .env, 10 when it is not set.
+  scoring: {batch_size: "${LLM_BATCH_SIZE:-10}", temperature: 0, max_tokens: 1500}
 
 # Earlier industry answers, reused when company, industry and size match. Discarded whenever
 # the model or prompt changes.
 cache:
   enabled: true
   path: .cache/industry.json
+
+# Decision rules (pipeline/decide.py), applied to the weighted score (1-10).
+thresholds: {qualified: 7.0, review: 5.0}   # >= qualified: qualified; >= review: review; below: rejected
+priority: {high: 8.5}                       # qualified leads at or above this are HIGH, the rest MEDIUM
+caps:
+  stale_days: 180                # no contact for longer than this caps the decision at review
+  hard_reject_size_below: 10     # a no-fit industry with fewer employees is rejected outright
+  hard_reject_size_above: 5000   # ... or with more employees
