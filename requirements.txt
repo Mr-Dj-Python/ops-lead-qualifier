@@ -1,0 +1,15 @@
+# Direct dependencies only, pinned. Transitive packages are resolved by pip.
+# Update workflow: pip install <pkg>, then add or bump its pin here.
+
+# Config and environment
+PyYAML==6.0.3
+python-dotenv==1.2.4
+
+# Response validation (schemas for LLM output)
+pydantic==2.14.1
+
+# Tests
+pytest==9.1.1
+
+# LLM provider SDK: add one once the provider is chosen, for example
+# groq / openai / google-genai
