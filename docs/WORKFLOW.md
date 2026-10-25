@@ -175,6 +175,8 @@ sequenceDiagram
 
 All bands live in `config.yaml`, not in code.
 
+**Implementation (factory pattern):** each factor is a `RuleScorer` subclass in `pipeline/rules.py` (`SizeRule`, `SourceRule`, `RecencyRule`), registered by name with `@register_rule`. `RuleFactory.create_all(config["rules"])` builds the scorers listed under `rules:` in `config.yaml`. To add an attribute rule, write one new class and add one config entry; no other code changes. Every rule returns a score (1-10) and a short `detail` that feeds the per-lead explanation.
+
 ### Stage 3: LLM scoring (batched)
 - **Factor:** industry fit (weight **40%**, the largest because it separates buyers from non-buyers in this product).
 - Input per lead: `lead_id`, company, industry label, company size.
@@ -188,7 +190,7 @@ All bands live in `config.yaml`, not in code.
   - Still failing: mark the lead `review` with reason "LLM scoring failed"; the run continues.
 
 ### Stage 4: Decision and ranking (code)
-- `final_score = 0.40*industry + 0.25*size + 0.20*source + 0.15*recency` (range 1-10).
+- `final_score = 0.40*industry + 0.25*size + 0.20*source + 0.15*recency` (range 1-10). The weights live in `.env` (`WEIGHT_INDUSTRY=0.40`, `WEIGHT_SIZE=0.25`, `WEIGHT_SOURCE=0.20`, `WEIGHT_RECENCY=0.15`), and `config.yaml` refers to them as `${WEIGHT_INDUSTRY}` and so on. Edit `.env` to change a weight; no code or YAML edit is needed. A real environment variable with the same name takes priority over `.env`. A missing variable, a non-numeric or negative value, or weights that do not add up to 1 stop the run with an error that names the problem. `.env` is not committed to git, so each checkout needs its own.
 - Thresholds (tune on the test data):
   - `>= 7.0` qualified
   - `5.0 - 6.9` review
@@ -250,7 +252,7 @@ lead-qualifier/
   data/              leads_training.csv, leads_testing.csv, leads_full_scale_100.csv
   output_report.json sample output (from the 100-lead file)
   README.md          1 page
-  .env.example       API key placeholder (never commit real keys)
+  .env               scoring weights (and later the API key); git-ignored, never commit real keys
 ```
 
 ## 7. Build plan (about 8-10 hours)

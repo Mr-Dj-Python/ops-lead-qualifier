@@ -5,6 +5,46 @@
 # Leave unset to default to today.
 reference_date: "2024-01-21"
 
+# Share of the final score for each factor; must add up to 1. Industry fit is scored by the LLM,
+# the other three by the rules below. The values live in .env: ${NAME} is replaced by NAME
+# from the .env file (a real environment variable of the same name takes priority).
+weights:
+  industry: ${WEIGHT_INDUSTRY}
+  size: ${WEIGHT_SIZE}
+  source: ${WEIGHT_SOURCE}
+  recency: ${WEIGHT_RECENCY}
+
+# Rule-based scoring (pipeline/rules.py). Each key names a registered rule; scores are 1-10.
+rules:
+  size:
+    # Inclusive bands; the first match wins. Omit min or max for an open end.
+    bands:
+      - {min: 50, max: 500, score: 10, label: "target range"}
+      - {min: 20, max: 49, score: 7, label: "a little small"}
+      - {min: 501, max: 1000, score: 7, label: "a little large"}
+      - {min: 10, max: 19, score: 4, label: "too small"}
+      - {min: 1001, max: 5000, score: 4, label: "too large for a standard deal"}
+      - {max: 9, score: 1, label: "under 10"}
+      - {min: 5001, score: 1, label: "over 5,000"}
+    missing_score: 5
+  source:
+    scores:
+      "inbound demo request": 10
+      "referral": 9
+      "sales call": 8
+      "webinar attendee": 6
+      "content download": 5
+      "linkedin outreach": 3
+    unknown_score: 4
+  recency:
+    # Days since last interaction; first band with days <= max_days wins.
+    bands:
+      - {max_days: 14, score: 10}
+      - {max_days: 30, score: 7}
+      - {max_days: 90, score: 4}
+    older_score: 1
+    missing_score: 1
+
 # Values (trimmed, case-insensitive) that mean "no data" and are converted to null.
 # Keep them quoted: an unquoted null is read by YAML as an empty value, not text.
 missing_values:
