@@ -92,6 +92,8 @@ llm:
   validation_retries: 2   # re-asks for invalid or missing items in a batch
   # Leads per LLM call: LLM_BATCH_SIZE from .env, 10 when it is not set.
   scoring: {batch_size: "${LLM_BATCH_SIZE:-10}", temperature: 0, max_tokens: 1500}
+  # Emails: same batch size, a little variation in wording (temperature), more room per lead.
+  messaging: {batch_size: "${LLM_BATCH_SIZE:-10}", temperature: 0.7, max_tokens: 2000}
 
 # Earlier industry answers, reused when company, industry and size match. Discarded whenever
 # the model or prompt changes.
@@ -106,3 +108,14 @@ caps:
   stale_days: 180                # no contact for longer than this caps the decision at review
   hard_reject_size_below: 10     # a no-fit industry with fewer employees is rejected outright
   hard_reject_size_above: 5000   # ... or with more employees
+
+# Personalised first-touch emails for qualified leads (pipeline/messages.py). The prompt and the
+# validator are both built from these values, so they cannot disagree.
+messages:
+  sender_name: "${SENDER_NAME:-The OpsFlow Team}"   # the line under "Best regards,"; set SENDER_NAME in .env
+  call_minutes: 15              # the one number a message may mention besides the lead's own details
+  min_words: 40                 # body length, greeting to sign-off
+  max_words: 100
+  max_subject_words: 10
+  reengagement_after_days: 30   # no contact for longer than this: the re-engagement variant
+  warm_sources: ["inbound demo request", "referral"]   # these sources get the warm follow-up

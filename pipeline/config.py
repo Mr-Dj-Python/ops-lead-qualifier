@@ -25,6 +25,17 @@ def parse_iso_date(text: str) -> date:
     return date.fromisoformat(text.strip())
 
 
+def whole_number(value) -> int | None:
+    """An int, or text such as "10" (config values filled in from .env are text); else None."""
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str) and re.fullmatch(r"\s*\d+\s*", value):
+        return int(value)
+    return None
+
+
 def load_env(env_file: str | Path | None = None, required: bool = False) -> dict[str, str]:
     """Return the settings visible to the program: values from the .env file, then the real
     environment on top of them (a real environment variable wins over the file).

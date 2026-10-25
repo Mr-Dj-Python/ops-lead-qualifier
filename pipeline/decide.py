@@ -252,6 +252,16 @@ def _explain(
     return "\n".join(lines)
 
 
+def add_flag(decision: LeadDecision, flag: str) -> None:
+    """Add a flag after ranking (for example message_failed) and keep the explanation in step."""
+    if flag in decision.flags:
+        return
+    decision.flags = sorted({*decision.flags, flag})
+    lines = [line for line in decision.explanation.splitlines() if not line.startswith("  Flags: ")]
+    lines.append(f"  Flags: {', '.join(decision.flags)}")
+    decision.explanation = "\n".join(lines)
+
+
 def summarize(decisions: list[LeadDecision], settings: DecisionSettings) -> DecisionSummary:
     """Counts, average and range of the weighted score, factor averages, rejection reasons."""
     counts = Counter(decision.decision for decision in decisions)
