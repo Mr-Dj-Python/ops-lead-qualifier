@@ -119,6 +119,7 @@ class Lead(BaseModel):
     model_config = ConfigDict(strict=True)  # no "50" for a size; only real types
 
     lead_id: str = Field(pattern=r"^L\d{3,}$")
+    source_row: int | None = Field(default=None, ge=2)  # line in the CSV file (the header is line 1)
     name: str | None = None
     company: str | None = None
     company_size: int | None = Field(default=None, ge=1)
@@ -329,3 +330,91 @@ class GeneratedMessage(BaseModel):
     subject: str = Field(min_length=1)
     body: str = Field(min_length=1)
     word_count: int = Field(ge=1)
+
+
+# --- results handed from one stage to the next ------------------------------------------------
+
+class RowError(BaseModel):
+    """A CSV row that was dropped, and why."""
+
+    row: int = Field(ge=1)  # the line number in the file (the header is line 1)
+    reason: str = Field(min_length=1)
+
+
+class IngestResult(BaseModel):
+    leads: list[Lead]
+    errors: list[RowError]
+    rows_read: int = Field(ge=0)
+
+
+class Issue(BaseModel):
+    """Something that went wrong or was worked around during a run, kept for the report."""
+
+    stage: Literal["ingest", "industry", "messages"]
+    kind: str = Field(min_length=1)  # for example dropped_row, llm_call_failed, score_clamped
+    detail: str = Field(min_length=1)
+    lead_id: str | None = None
+    row: int | None = Field(default=None, ge=1)
+
+
+class IndustryProvenance(BaseModel):
+    """Where one lead's industry answer came from."""
+
+    source: Literal["llm", "cache", "fallback"]
+    request_id: str | None = None  # the lead whose request answered it (identical leads share one)
+    batch: int | None = Field(default=None, ge=1)  # which industry batch of the run, if one was asked
+    attempts: int = Field(default=0, ge=0)  # how many times this lead was sent to the model
+
+
+class MessageProvenance(BaseModel):
+    """How one qualified lead's message came about."""
+
+    status: Literal["written", "failed"]
+    variant: Variant
+    batch: int = Field(ge=1)  # which message batch of the run
+    attempts: int = Field(ge=0)  # how many times this lead was sent to the model
+
+
+class IndustryScoring(BaseModel):
+    """What the industry-fit stage returns. The counters are updated while it runs, and every
+    assignment is validated."""
+
+    model_config = ConfigDict(validate_assignment=True)
+
+    results: dict[str, IndustryResult]  # keyed by lead_id, one per lead
+    api_calls: int = Field(default=0, ge=0)
+    cache_hits: int = Field(default=0, ge=0)  # leads answered from the cache
+    failed_ids: list[str] = Field(default_factory=list)  # leads that fell back after retries
+    batch_sizes: list[int] = Field(default_factory=list)  # leads sent in each batch, in order
+    validation_retries: int = Field(default=0, ge=0)  # extra asks because items were invalid or missing
+    provenance: dict[str, IndustryProvenance] = Field(default_factory=dict)  # keyed by lead_id
+    issues: list[Issue] = Field(default_factory=list)
+
+
+class MessageRun(BaseModel):
+    """What the message stage returns."""
+
+    model_config = ConfigDict(validate_assignment=True)
+
+    messages: dict[str, GeneratedMessage]  # keyed by lead_id; only leads that got a valid email
+    api_calls: int = Field(default=0, ge=0)
+    failed_ids: list[str] = Field(default_factory=list)  # qualified leads left without a message
+    batch_sizes: list[int] = Field(default_factory=list)
+    validation_retries: int = Field(default=0, ge=0)
+    provenance: dict[str, MessageProvenance] = Field(default_factory=dict)  # keyed by lead_id
+    issues: list[Issue] = Field(default_factory=list)
+
+
+class DecisionSummary(BaseModel):
+    """Counts, average and range of the weighted score, and why leads were rejected."""
+
+    total: int = Field(ge=0)
+    counts: dict[Decision, int]
+    average_score: float
+    highest_score: float
+    lowest_score: float
+    average_factor_scores: dict[str, float]
+    rejection_reasons: list[tuple[str, int]] = Field(default_factory=list)  # most common first
+
+    def percent(self, decision: str) -> float:
+        return 100 * self.counts[decision] / self.total if self.total else 0.0

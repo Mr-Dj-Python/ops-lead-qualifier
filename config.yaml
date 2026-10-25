@@ -119,3 +119,12 @@ messages:
   max_subject_words: 10
   reengagement_after_days: 30   # no contact for longer than this: the re-engagement variant
   warm_sources: ["inbound demo request", "referral"]   # these sources get the warm follow-up
+
+# Stage 6: the run report, the run log and the numbers behind "time saved" (pipeline/report.py).
+# Runs with --score-industry write both files; --output and --log-file override these paths.
+report:
+  output_path: output_report.json
+  log_path: run.log          # appended to; every line carries the run id
+  log_level: INFO            # DEBUG, INFO or WARNING
+  manual_minutes_per_lead: 10   # the brief: 8-12 minutes to decide one lead by hand
+  sample_messages: 5         # example messages in the report (one per variant first)

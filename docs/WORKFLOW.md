@@ -144,7 +144,7 @@ sequenceDiagram
     Msg-->>CLI: Messages per qualified lead
 
     CLI->>Rep: Leads, stats, errors, sample messages
-    Rep->>Rep: Build stats, priority queue, rejection reasons
+    Rep->>Rep: Build report (stats, traces, telemetry), run the 18 workflow checks
     Rep-->>CLI: output_report.json and run.log written
     CLI-->>User: Terminal summary (counts, retries, failures, time saved)
 ```
@@ -163,6 +163,8 @@ Every record that moves through the pipeline is a Pydantic model, so bad data is
 | LLM reply | `IndustryResponse`, `IndustryItem` | The reply is `{"results": [...]}` (a bare list is accepted); each item is checked on its own: tier and confidence are from the allowed lists (exact case), the score is a whole number (no `true`, no `"10"`) inside its tier's range, the reason is non-empty and cut to 200 characters |
 | Industry result | `IndustryResult` | Frozen record of a validated answer, or the fallback |
 | Decision | `LeadDecision` | Score 1 to 10; priority only for qualified leads; a rejection reason only for rejected leads; ranks are validated when they are assigned |
+
+Settings and the results handed from one stage to the next are Pydantic models as well, never dataclasses, so validation lives in the model: `DecisionSettings`, `IndustrySettings`, `MessageSettings` and `RetryPolicy` (checked when built from `config.yaml`, with errors that name the config path), `MessageRules`, and the result containers `IngestResult` (with `RowError`), `IndustryScoring`, `MessageRun` and `DecisionSummary` (their counters are validated each time they change). A test fails if a dataclass is added back to the pipeline. `RetryPolicy` rejects unknown keys, so a misspelt `max_attemps` is an error, not silently ignored.
 
 The internal models use strict mode (no silent conversion of text to numbers). `LeadRow` and `IndustryItem` are lenient on purpose, because they read text from a file and from a model; their custom checks decide what is accepted. A score outside its tier's range fails with the error type `score_out_of_range`, which the scorer treats as clampable after retries.
 
@@ -274,24 +276,64 @@ Runs only for qualified leads, in their priority order, as a separate call from 
 
 **Implementation:** `pipeline/messages.py` (`MessageGenerator`, `MessageSettings`), `pipeline/prompts.py` (the system prompt is generated from `config.yaml`, with one worked example per variant that is itself tested against the rules), `pipeline/message_checks.py`, and the `MessagePayload`, `MessageResponse`, `MessageItem` and `GeneratedMessage` models. Run with `python main.py --input ... --score-industry --messages`.
 
-### Stage 6: Report
-`output_report.json`:
+### Stage 6: Report, traceability, telemetry and run log
+Every run with `--score-industry` writes `output_report.json`, appends to `run.log`, checks the whole workflow against itself, and ends with a terminal summary. `--output` and `--log-file` override the paths in the `report` section of `config.yaml`. The report is built from Pydantic models (`pipeline/report.py`) and loads back with `Report.model_validate_json`.
+
+**`output_report.json`**
 ```
 {
-  "run_info":   { timestamp, model, batch_size, reference_date, duration_sec,
-                  rubric { definition, weights, bands, thresholds, caps } },
-  "stats":      { total, processed, qualified_pct, review_pct, rejected_pct,
-                  top_rejection_reasons[], by_industry_tier{}, api_retries,
-                  failed_leads, est_manual_minutes_saved },
-  "leads":      [ { lead_id, name, company, factor_scores{}, factor_points{},
-                    final_score, decision, priority, priority_rank,
-                    explanation, flags[], message } ],
-  "priority_queue": [ lead_ids in order ],
-  "sample_messages": [ 3-5 examples across the variants ],
-  "errors":     [ dropped rows, failed calls ]
+  "run_info":   { schema_version, run_id, started_at, finished_at, duration_s, python, git_commit,
+                  input { path, sha256, rows_read, leads_kept, rows_dropped }, reference_date,
+                  provider, model, industry_batch_size, message_batch_size, strict,
+                  rubric { weights, qualified_at, review_at, high_priority_at, stale_days,
+                           reject_size_below, reject_size_above, tier_score_ranges },
+                  fingerprints { config_sha256, industry_prompt_sha256, message_prompt_sha256 }, log_file },
+  "stats":      { total, processed, qualified/review/rejected (+ _pct), average_score, highest_score,
+                  lowest_score, average_factor_scores, top_rejection_reasons[], by_industry_tier,
+                  by_variant, messages_written, messages_failed, failed_leads, api_retries,
+                  est_manual_minutes_saved },
+  "leads":      [ { rank, lead_id, name, company, industry, company_size, source, last_interaction_date,
+                    tier, confidence, industry_reason, factor_scores, factor_points, final_score,
+                    decision, priority, priority_rank, rules_applied, rejection_reason, flags,
+                    explanation, message { variant, subject, body, word_count },
+                    trace { source_row, notes, industry { source, request_id, batch, attempts },
+                            message { status, batch, attempts } } } ],   // best fit first
+  "priority_queue": [ qualified lead ids, first to contact first ],
+  "sample_messages": [ up to 5, one of each variant first ],
+  "errors":     [ { stage, kind, detail, lead_id, row } ],   // dropped rows, unparsed values, failed calls, fallbacks
+  "telemetry":  { stages [ { name, duration_s, items } ], industry { batches, batch_sizes, api_calls,
+                  validation_retries, usage }, messages { ... }, llm_total, cache_hits, log { warnings, errors }, log_file },
+  "validation": { passed, checks [ { name, passed, detail } ] }
 }
 ```
-Also print a short summary in the terminal and write details to `run.log`.
+
+**Traceability.** Any decision can be followed back to its source:
+- `run_info.input.sha256` and `run_info.fingerprints` (config, industry prompt, message prompt) pin the exact input, rubric text and prompts; `rubric` records the weights, thresholds and caps as they ran, and `git_commit` the code.
+- Every lead carries `trace.source_row`, the line in the CSV it came from.
+- `trace.industry` says whether the industry answer came from the model, the cache, or the fallback, which batch asked for it, how many times the lead was sent to the model, and which lead's request answered it (leads with identical details share one).
+- `trace.message` says which message batch wrote the email and in how many attempts, or that it failed.
+- `explanation`, `rules_applied` and `factor_points` show how the score and decision were reached.
+
+**Telemetry.** Per stage: duration and items processed. Per LLM stage: batches and their sizes, API calls, validation re-asks, and the client's usage (requests, rate-limit and timeout failures, retries, calls given up on, time waiting, prompt and completion tokens). `llm_total` adds the stages up. `log` counts the warnings and errors written to `run.log`.
+
+**`run.log`.** Appended to, so several runs keep their history; every line starts with a timestamp, the level, and `run=<run id>`. It records the run start (input, reference date), `stage <name> started` and `finished in <s> items=<n>` for every stage, each batch (`industry batch 3/10: 10 lead(s)`), every retry, re-ask, clamp and fallback, dropped rows and unparsed values, and the final `report written` line. `report.log_level` (INFO by default) sets the detail; the console shows warnings and errors only.
+
+**Workflow validation (`validation`).** Eighteen automated checks run the run's output against itself and against `run.log`, and the CLI exits 1 if any fails (the report is still written so it can be inspected):
+1. `input_rows_accounted_for`: rows read = leads kept + rows dropped
+2. `every_lead_scored_by_every_rule` and 3. `every_lead_has_an_industry_answer`
+4. `every_lead_decided_exactly_once`
+5. `weights_add_up_to_one`, 6. `scores_are_in_range`, 7. `points_add_up_to_final_scores`
+8. `ranking_is_ordered` (ranks 1..N, scores never increase) and 9. `priority_ranks_are_contiguous` (qualified leads only, and the queue matches)
+10. `decisions_follow_the_rules`: thresholds, caps, hard reject and forced review all hold for every lead
+11. `decision_counts_add_up`
+12. `llm_calls_are_batched`: no batch above the configured size, no more calls than batches x (1 + re-asks), never one call per lead
+13. `messages_cover_qualified_leads` and 14. `messages_pass_the_rules_again` (every final message is re-checked)
+15. `every_lead_is_traceable`: CSV row and industry trace on every lead, message trace on every qualified lead
+16. `failures_are_all_reported`: every fallback and failed message appears in `errors`
+17. `no_secrets_in_report`: the API key does not appear in the report
+18. `run_log_matches_the_run`: `run.log` holds this run's id and a `finished` line for every stage (skipped when there is no log file)
+
+**Terminal summary** (printed last): run id and duration, the report and log paths, the input and its short hash, kept and dropped rows, decision counts, the score average and range, messages written and failed, LLM calls, retries, re-asks, tokens and waiting time, stage durations, the number of issues and log warnings, the estimated minutes saved (`report.manual_minutes_per_lead`, default 10, times the leads, minus the run time), and the validation result with any failed checks.
 
 ## 6. Project structure
 ```
@@ -299,9 +341,10 @@ lead-qualifier/
   main.py            CLI entry (argparse): --input --output --batch-size --reference-date
   config.yaml        weights, bands, thresholds, tier table, model settings
   pipeline/          ingest.py, rules.py, llm_client.py, prompts.py, industry.py, decide.py, models.py,
-                     messages.py, message_checks.py, report.py
+                     messages.py, message_checks.py, telemetry.py, report.py
   data/              leads_training.csv, leads_testing.csv, leads_full_scale_100.csv
-  output_report.json sample output (from the 100-lead file)
+  output_report.json written by each run (keep one from the 100-lead file as the sample)
+  run.log            appended to by each run (git-ignored)
   README.md          1 page
   .env               scoring weights (and later the API key); git-ignored, never commit real keys
 ```

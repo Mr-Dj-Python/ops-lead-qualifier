@@ -45,11 +45,7 @@ def settings(config, scorers):
 
 def only_industry(settings):
     """Weights that make the weighted score equal the industry score, to hit thresholds exactly."""
-    return DecisionSettings(
-        {"industry": 1.0, "size": 0.0, "source": 0.0, "recency": 0.0},
-        settings.qualified_at, settings.review_at, settings.high_priority_at,
-        settings.stale_days, settings.reject_size_below, settings.reject_size_above,
-    )
+    return DecisionSettings(weights={"industry": 1.0, "size": 0.0, "source": 0.0, "recency": 0.0}, qualified_at=settings.qualified_at, review_at=settings.review_at, high_priority_at=settings.high_priority_at, stale_days=settings.stale_days, reject_size_below=settings.reject_size_below, reject_size_above=settings.reject_size_above)
 
 
 def make_lead(lead_id="L001", size=100, last=date(2024, 1, 15), flags=(), company="Acme", industry="Logistics"):
@@ -138,10 +134,7 @@ def test_weighted_score_is_the_weighted_average_on_the_same_scale(settings):
 
 
 def test_changed_weights_change_the_score(settings):
-    heavier_size = DecisionSettings(
-        {"industry": 0.1, "size": 0.7, "source": 0.1, "recency": 0.1},
-        7.0, 5.0, 8.5, 180, 10, 5000,
-    )
+    heavier_size = DecisionSettings(weights={"industry": 0.1, "size": 0.7, "source": 0.1, "recency": 0.1}, qualified_at=7.0, review_at=5.0, high_priority_at=8.5, stale_days=180, reject_size_below=10, reject_size_above=5000)
     base = decide(make_lead(), fit(score=10), settings, rules(1, 10, 10)).final_score
     shifted = decide(make_lead(), fit(score=10), heavier_size, rules(1, 10, 10)).final_score
     assert base == 7.75 and shifted == 3.7
@@ -180,7 +173,7 @@ def test_only_qualified_leads_get_a_priority(settings):
     ],
 )
 def test_caps_stop_a_high_score_from_qualifying(settings, lead, fit_result, rule_text):
-    strong = DecisionSettings({"industry": 0.0, "size": 0.5, "source": 0.5, "recency": 0.0}, 7.0, 5.0, 8.5, 180, 10, 5000)
+    strong = DecisionSettings(weights={"industry": 0.0, "size": 0.5, "source": 0.5, "recency": 0.0}, qualified_at=7.0, review_at=5.0, high_priority_at=8.5, stale_days=180, reject_size_below=10, reject_size_above=5000)
     result = decide(lead, fit_result, strong)
     assert result.final_score == 10 and result.decision == REVIEW and result.priority is None
     assert any(rule_text in rule for rule in result.rules_applied)
@@ -209,7 +202,7 @@ def test_caps_never_raise_a_decision(settings):
 
 @pytest.mark.parametrize("size", [1, 9, 5001, 50000])
 def test_no_fit_industry_with_unrealistic_size_is_rejected_whatever_the_score(settings, size):
-    strong = DecisionSettings({"industry": 0.0, "size": 0.0, "source": 0.5, "recency": 0.5}, 7.0, 5.0, 8.5, 180, 10, 5000)
+    strong = DecisionSettings(weights={"industry": 0.0, "size": 0.0, "source": 0.5, "recency": 0.5}, qualified_at=7.0, review_at=5.0, high_priority_at=8.5, stale_days=180, reject_size_below=10, reject_size_above=5000)
     result = decide(make_lead(size=size), fit(tier="none", score=3), strong)
     assert result.final_score == 10 and result.decision == REJECTED
     assert "no-fit industry" in result.rules_applied[0]
@@ -218,12 +211,12 @@ def test_no_fit_industry_with_unrealistic_size_is_rejected_whatever_the_score(se
 
 @pytest.mark.parametrize("size", [10, 50, 5000, None])
 def test_no_fit_industry_with_ordinary_or_unknown_size_is_not_hard_rejected(settings, size):
-    strong = DecisionSettings({"industry": 0.0, "size": 0.0, "source": 0.5, "recency": 0.5}, 7.0, 5.0, 8.5, 180, 10, 5000)
+    strong = DecisionSettings(weights={"industry": 0.0, "size": 0.0, "source": 0.5, "recency": 0.5}, qualified_at=7.0, review_at=5.0, high_priority_at=8.5, stale_days=180, reject_size_below=10, reject_size_above=5000)
     assert decide(make_lead(size=size), fit(tier="none", score=3), strong).decision == REVIEW
 
 
 def test_a_better_industry_with_tiny_size_is_not_hard_rejected(settings):
-    strong = DecisionSettings({"industry": 0.0, "size": 0.0, "source": 0.5, "recency": 0.5}, 7.0, 5.0, 8.5, 180, 10, 5000)
+    strong = DecisionSettings(weights={"industry": 0.0, "size": 0.0, "source": 0.5, "recency": 0.5}, qualified_at=7.0, review_at=5.0, high_priority_at=8.5, stale_days=180, reject_size_below=10, reject_size_above=5000)
     assert decide(make_lead(size=5), fit(tier="best", score=10), strong).decision == QUALIFIED
 
 
@@ -394,11 +387,10 @@ class DataFileClient(RulesClient):
 
 
 def run_file(filename, config, scorers, settings, tmp_path):
-    import dataclasses
     from pipeline.industry import IndustryScorer, IndustrySettings
 
     leads = ingest_csv(ROOT / "data" / filename, REFERENCE, config["missing_values"]).leads
-    industry_settings = dataclasses.replace(IndustrySettings.from_config(config), cache_path=tmp_path / "c.json")
+    industry_settings = IndustrySettings.from_config(config).model_copy(update={"cache_path": tmp_path / "c.json"})
     industry = IndustryScorer(DataFileClient(config["tiers"]), industry_settings).score(leads)
     scores = score_leads(leads, scorers, REFERENCE)
     return leads, decide_leads(leads, scores, industry.results, settings, REFERENCE)

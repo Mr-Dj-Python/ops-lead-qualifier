@@ -1,4 +1,3 @@
-import dataclasses
 import json
 from datetime import date
 from pathlib import Path
@@ -330,7 +329,7 @@ def test_one_bad_message_does_not_cost_its_batch_mates_theirs(settings):
 
 def test_a_transport_failure_costs_only_that_batch(settings):
     leads = [make_lead(f"L00{n}", company=f"Company {n}") for n in range(1, 4)]
-    one_at_a_time = dataclasses.replace(settings, batch_size=2)
+    one_at_a_time = settings.model_copy(update={"batch_size": 2})
     client = MessageClient([LLMError("down")])
     run = write(client, one_at_a_time, leads)
     assert run.failed_ids == ["L001", "L002"] and set(run.messages) == {"L003"} and run.api_calls == 2
@@ -355,7 +354,7 @@ def test_ids_that_were_not_asked_for_and_duplicates_are_ignored(settings):
 
 def test_the_reply_budget_grows_with_the_batch(settings):
     client = MessageClient()
-    big = dataclasses.replace(settings, batch_size=40, max_tokens=100)
+    big = settings.model_copy(update={"batch_size": 40, "max_tokens": 100})
     write(client, big, [make_lead(f"L{n:03d}", company=f"Company {n}") for n in range(1, 31)])
     assert client.max_tokens_seen == [250 * 30]
 
@@ -371,7 +370,7 @@ def test_a_lead_field_cannot_break_out_of_the_data_block(settings):
 def run_pipeline(filename, config, settings, tmp_path):
     scorers = RuleFactory.create_all(config["rules"])
     leads = ingest_csv(ROOT / "data" / filename, REFERENCE, config["missing_values"]).leads
-    industry_settings = dataclasses.replace(IndustrySettings.from_config(config), cache_path=tmp_path / "c.json")
+    industry_settings = IndustrySettings.from_config(config).model_copy(update={"cache_path": tmp_path / "c.json"})
     industry = IndustryScorer(DataFileClient(config["tiers"]), industry_settings).score(leads)
     decisions = decide_leads(
         leads, score_leads(leads, scorers, REFERENCE), industry.results,
@@ -498,3 +497,38 @@ def test_cli_uses_the_default_sign_off_without_sender_name(tmp_path, monkeypatch
          "--env-file", str(env_file), "--score-industry", "--messages"]
     ) == 0
     assert "Best regards,\nThe OpsFlow Team" in capsys.readouterr().out
+
+
+# --- traceability and telemetry of the stage ----------------------------------------------------
+
+def test_message_provenance_records_batch_attempts_and_variant(settings):
+    leads = [make_lead(f"L{n:03d}", company=f"Company {chr(64 + n)}") for n in range(1, 13)]
+    run = write(MessageClient(), settings, leads)
+    assert run.batch_sizes == [10, 2] and run.validation_retries == 0 and run.issues == []
+    assert run.provenance["L001"].model_dump() == {"status": "written", "variant": "warm_followup", "batch": 1, "attempts": 1}
+    assert run.provenance["L011"].batch == 2 and len(run.provenance) == 12
+
+
+def test_a_reask_shows_in_the_attempts_and_the_run_counter(settings):
+    leads = [make_lead("L001"), make_lead("L002", company="Beta Freight")]
+    client = MessageClient([lambda prompt: reply(payloads_in(prompt)[:1])])
+    run = write(client, settings, leads)
+    assert run.validation_retries == 1
+    assert (run.provenance["L001"].attempts, run.provenance["L002"].attempts) == (1, 2)
+
+
+def test_a_failed_message_has_a_failed_provenance_and_an_issue_with_the_reasons(settings):
+    bad = lambda prompt: reply(payloads_in(prompt), body="Hi there, buy now!")
+    run = write(MessageClient([bad, bad, bad]), settings, [make_lead()])
+    assert run.provenance["L001"].model_dump() == {"status": "failed", "variant": "warm_followup", "batch": 1, "attempts": 3}
+    assert run.validation_retries == 2
+    issue = run.issues[-1]
+    assert (issue.stage, issue.kind, issue.lead_id) == ("messages", "message_failed", "L001")
+    assert "exclamation" in issue.detail
+
+
+def test_transport_failures_and_unusable_replies_are_issues(settings):
+    run = write(MessageClient([LLMError("provider is down")]), settings, [make_lead()])
+    assert [i.kind for i in run.issues] == ["llm_call_failed", "message_failed"]
+    run = write(MessageClient(["not json", "{}", "{}"]), settings, [make_lead()])
+    assert [i.kind for i in run.issues].count("unusable_reply") == 3

@@ -376,6 +376,12 @@ messages:
   warm_sources: ["inbound demo request", "referral"]
 cache: {enabled: true, path: .cache/industry.json}
 reference_date: "2024-01-21"   # default today for real data
+report:
+  output_path: output_report.json
+  log_path: run.log            # appended to; every line carries the run id
+  log_level: INFO              # DEBUG, INFO or WARNING
+  manual_minutes_per_lead: 10  # the brief: 8-12 minutes to decide a lead by hand
+  sample_messages: 5
 data: {training: data/leads_training.csv, testing: data/leads_testing.csv, full: data/leads_full_scale_100.csv}
 ```
 
@@ -433,3 +439,19 @@ Score: {final}/10  Decision: {DECISION}  [Priority: {HIGH|MEDIUM}]
 Rules: missing values print as "not provided (scored neutral)"; the four `pts` values must sum to `final` (rounded to 2 decimals) or the build fails a unit test; a weak explanation such as "seems like a good lead" cannot be produced because every line is filled from data.
 
 Worked example (reference date 2024-01-21): Alice Chen, CloudScale AI, 50 people, SaaS, inbound demo request, 6 days ago scores 6.8 and is **Review**: industry fit 2 (0.80 pts), size 10 (2.50), source 10 (2.00), engagement 10 (1.50). The explanation says the score is in the review band; a rule line is added only when a rule changed the outcome (for example the no-fit industry cap on a lead scoring 7.2). A SaaS vendor would qualify this lead; under this operations-software rubric it does not, and the explanation says why.
+
+---
+
+## 11. Report, traceability, telemetry and run log (Stage 6)
+Full description and the report layout are in `WORKFLOW.md` Stage 6. Implementation notes:
+
+| Piece | Where | Notes |
+|---|---|---|
+| Run id, stage timing, run log | `pipeline/telemetry.py` (`RunRecorder`) | The id is `<UTC timestamp>-<6 hex>`. A filter stamps `run=<id>` on every log line; a file handler appends to `run.log`; a counting handler tallies warnings and errors. Handlers and the log level are restored when the run ends, even on failure. Only the `pipeline` logger is captured, so other libraries do not write into the run log |
+| LLM usage | `LLMUsage` in `pipeline/llm_client.py` | Kept by `LLMAPIClient.complete`: requests, transient failures, retries, calls given up on, latency, and tokens when the provider reports them. A stage's usage is the difference between two snapshots |
+| Provenance | `IndustryProvenance`, `MessageProvenance`, `Issue` in `pipeline/models.py` | Filled in by the industry and message stages: source (llm, cache, fallback), batch, attempts, request id, batch sizes, re-ask counts, and issues such as `llm_call_failed`, `unusable_reply`, `score_clamped`, `fell_back_to_review`, `message_failed`. `Lead.source_row` carries the CSV line |
+| Report | `pipeline/report.py` | `PipelineOutcome` (the validated output of every stage plus the run's measurements) goes into `build_report`, which returns a `Report` model. The API key is held in `PipelineOutcome.secrets`, which is excluded from serialisation, and used only to prove it is absent |
+| Workflow checks | `validate_workflow` in `pipeline/report.py` | 18 checks; each returns a name, pass or fail, and a detail. They never raise on the inconsistency they report, so a damaged outcome produces a failed check, not a crash |
+| Output | `write_report` | Written to a temporary file and moved into place, so a half-written report is never left behind |
+
+Exit status: 1 when a workflow check fails (the report is still written), when the API key is rejected, or when the config or input cannot be used.

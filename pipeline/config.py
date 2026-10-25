@@ -10,6 +10,7 @@ from typing import Mapping
 
 import yaml
 from dotenv import dotenv_values
+from pydantic import ValidationError
 
 _PLACEHOLDER = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}")
 
@@ -34,6 +35,39 @@ def whole_number(value) -> int | None:
     if isinstance(value, str) and re.fullmatch(r"\s*\d+\s*", value):
         return int(value)
     return None
+
+
+def parse_count(value, minimum: int, hint: str = "") -> int:
+    """A whole number of at least `minimum` (text such as "10" is fine), or a ValueError whose
+    message reads naturally after a config path: "... must be a whole number of 1 or more, ..."."""
+    number = whole_number(value)
+    if number is None or number < minimum:
+        raise ValueError(f"must be a whole number of {minimum} or more, got {value!r}{hint}")
+    return number
+
+
+def parse_number(value, minimum: float | None = None) -> float:
+    """A finite number (optionally at least `minimum`), or a ValueError worded like parse_count."""
+    ok = isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+    if not ok or (minimum is not None and value < minimum):
+        floor = "" if minimum is None else f" of {minimum:g} or more"
+        raise ValueError(f"must be a number{floor}, got {value!r}")
+    return float(value)
+
+
+def config_error(exc: ValidationError, paths: Mapping[str, str] | None = None) -> ConfigError:
+    """Turn a pydantic error for a settings model into a ConfigError that names the config path.
+
+    `paths` maps a model field to the config path users know (for example batch_size ->
+    llm.scoring.batch_size). An error on no particular field is written out as it is.
+    """
+    parts = []
+    for error in exc.errors():
+        message = error["msg"].removeprefix("Value error, ")
+        field = error["loc"][0] if error["loc"] else None
+        path = (paths or {}).get(field, field) if field is not None else None
+        parts.append(f"config {path} {message}" if path else f"config {message}")
+    return ConfigError("; ".join(parts))
 
 
 def load_env(env_file: str | Path | None = None, required: bool = False) -> dict[str, str]:

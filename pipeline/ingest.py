@@ -7,13 +7,15 @@ raise as well.
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
+import logging
 from datetime import date
 from pathlib import Path
 
 from pydantic import ValidationError
 
-from pipeline.models import Lead, LeadRow
+from pipeline.models import IngestResult, Lead, LeadRow, RowError
+
+log = logging.getLogger(__name__)
 
 REQUIRED_COLUMNS = (
     "name",
@@ -31,13 +33,6 @@ SOFT_FIELDS = ("company_size", "last_interaction_date")
 
 class IngestError(Exception):
     """Raised when the CSV cannot be ingested."""
-
-
-@dataclass
-class IngestResult:
-    leads: list[Lead]
-    errors: list[dict]  # {"row": <csv line number>, "reason": <text>} for dropped rows
-    rows_read: int
 
 
 def _message(error: dict) -> str:
@@ -121,15 +116,15 @@ def ingest_csv(
     header, rows = _read_rows(Path(path))
     index = {column: header.index(column) for column in REQUIRED_COLUMNS}
 
-    errors: list[dict] = []
+    errors: list[RowError] = []
     candidates: list[dict] = []
     for line_number, fields in rows:
         if len(fields) != len(header):
-            errors.append({"row": line_number, "reason": f"expected {len(header)} fields, found {len(fields)}"})
+            errors.append(RowError(row=line_number, reason=f"expected {len(header)} fields, found {len(fields)}"))
             continue
         row, notes, reason = _validate_row({column: fields[index[column]] for column in REQUIRED_COLUMNS}, context)
         if row is None:
-            errors.append({"row": line_number, "reason": reason})
+            errors.append(RowError(row=line_number, reason=reason))
             continue
         candidates.append({"row": line_number, "values": row.model_dump(), "notes": notes})
 
@@ -145,11 +140,11 @@ def ingest_csv(
         newer = (values["last_interaction_date"] or date.min) > (current["values"]["last_interaction_date"] or date.min)
         loser, winner = (current, candidate) if newer else (candidate, current)
         kept[key] = winner
-        errors.append({"row": loser["row"], "reason": f"duplicate of row {winner['row']} (same name and company)"})
+        errors.append(RowError(row=loser["row"], reason=f"duplicate of row {winner['row']} (same name and company)"))
 
     survivors = sorted(kept.values(), key=lambda candidate: candidate["row"])
     leads = [
-        Lead(lead_id=f"L{number:03d}", notes=candidate["notes"], **candidate["values"])
+        Lead(lead_id=f"L{number:03d}", source_row=candidate["row"], notes=candidate["notes"], **candidate["values"])
         for number, candidate in enumerate(survivors, start=1)
     ]
     for lead in leads:
@@ -157,11 +152,19 @@ def ingest_csv(
         if lead.industry is None and gaps >= 2:
             lead.flags.append("insufficient_data")
 
-    errors.sort(key=lambda error: error["row"])
+    errors.sort(key=lambda error: error.row)
     result = IngestResult(leads=leads, errors=errors, rows_read=len(rows))
+    for error in errors:
+        log.warning("row %d dropped: %s", error.row, error.reason)
+    for lead in leads:
+        for note in lead.notes:
+            log.warning("%s (row %s): %s", lead.lead_id, lead.source_row, note)
+        for flag in lead.flags:
+            log.info("%s (row %s) flagged %s", lead.lead_id, lead.source_row, flag)
+    log.info("ingest: %d row(s) read, %d lead(s) kept, %d row(s) dropped", len(rows), len(leads), len(errors))
 
     if strict:
-        problems = [f"row {e['row']}: {e['reason']}" for e in errors]
+        problems = [f"row {e.row}: {e.reason}" for e in errors]
         problems += [f"{lead.lead_id}: {note}" for lead in leads for note in lead.notes]
         if problems:
             shown = "; ".join(problems[:5])

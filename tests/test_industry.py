@@ -1,4 +1,3 @@
-import dataclasses
 import json
 import math
 from pathlib import Path
@@ -32,7 +31,7 @@ def config():
 @pytest.fixture
 def settings(config, tmp_path):
     base = IndustrySettings.from_config(config)
-    return dataclasses.replace(base, batch_size=2, cache_path=tmp_path / "industry.json")
+    return base.model_copy(update={"batch_size": 2, "cache_path": tmp_path / "industry.json"})
 
 
 def lead(lead_id, company="Acme", industry="Logistics", size=100):
@@ -127,7 +126,7 @@ def test_leads_are_sent_in_batches_sorted_by_id(settings):
 def test_input_order_does_not_change_the_outcome(settings, tmp_path):
     leads = [lead(f"L00{n}", company=f"Co{n}") for n in range(1, 6)]
     first = score(ScriptedClient(), settings, leads).results
-    other = dataclasses.replace(settings, cache_path=tmp_path / "other.json")
+    other = settings.model_copy(update={"cache_path": tmp_path / "other.json"})
     second = score(ScriptedClient(), other, list(reversed(leads))).results
     assert first == second
 
@@ -328,7 +327,7 @@ def test_cache_is_discarded_when_the_model_changes(settings):
 
 def test_cache_is_discarded_when_the_prompt_changes(settings):
     score(ScriptedClient(), settings, [lead("L001")])
-    changed = dataclasses.replace(settings, system_prompt=settings.system_prompt + "\nExtra rule.")
+    changed = settings.model_copy(update={"system_prompt": settings.system_prompt + "\nExtra rule."})
     assert score(ScriptedClient(), changed, [lead("L001")]).api_calls == 1
 
 
@@ -355,7 +354,7 @@ def test_damaged_cache_entry_is_asked_again(settings):
 
 
 def test_cache_can_be_turned_off(settings):
-    off = dataclasses.replace(settings, cache_enabled=False)
+    off = settings.model_copy(update={"cache_enabled": False})
     score(ScriptedClient(), off, [lead("L001")])
     assert not settings.cache_path.exists()
     assert score(ScriptedClient(), off, [lead("L001")]).api_calls == 1
@@ -429,7 +428,7 @@ def test_missing_tier_is_rejected(config):
 def test_every_lead_in_the_data_files_gets_an_answer(config, settings, filename, count):
     leads = ingest_csv(ROOT / "data" / filename, date(2024, 1, 21), config["missing_values"]).leads
     client = RulesClient(config["tiers"])
-    full = dataclasses.replace(settings, batch_size=15)
+    full = settings.model_copy(update={"batch_size": 15})
     result = score(client, full, leads)
     assert len(result.results) == count and result.failed_ids == []
     unique = len({cache_key(each) for each in leads})
@@ -511,3 +510,67 @@ def test_cli_without_the_flag_never_touches_the_llm(tmp_path, monkeypatch, capsy
         ["--input", str(ROOT / "data" / "leads_training.csv"), "--config", str(ROOT / "config.yaml"), "--env-file", str(env_file)]
     ) == 0
     assert "Industry fit" not in capsys.readouterr().out
+
+
+# --- traceability and telemetry of the stage ----------------------------------------------------
+
+def test_provenance_records_batch_attempts_and_the_requesting_lead(settings):
+    leads = [lead(f"L00{n}", company=f"Co{n}") for n in range(1, 6)]
+    result = score(ScriptedClient(), settings, leads)  # batch size 2: batches {1,2} {3,4} {5}
+    assert result.batch_sizes == [2, 2, 1] and result.validation_retries == 0
+    assert {i: (p.source, p.batch, p.attempts, p.request_id) for i, p in result.provenance.items()} == {
+        "L001": ("llm", 1, 1, "L001"), "L002": ("llm", 1, 1, "L002"), "L003": ("llm", 2, 1, "L003"),
+        "L004": ("llm", 2, 1, "L004"), "L005": ("llm", 3, 1, "L005"),
+    }
+
+
+def test_identical_leads_share_the_request_and_say_so_in_their_provenance(settings):
+    result = score(ScriptedClient(), settings, [lead("L001"), lead("L002"), lead("L003", company="Other")])
+    assert result.provenance["L001"].request_id == "L001"
+    assert result.provenance["L002"].request_id == "L001" and result.provenance["L002"].batch == 1
+    assert result.provenance["L003"].request_id == "L003"
+
+
+def test_cache_hits_are_recorded_as_such(settings):
+    score(ScriptedClient(), settings, [lead("L001")])
+    result = score(ScriptedClient(), settings, [lead("L001"), lead("L002", company="New")])
+    assert (result.provenance["L001"].source, result.provenance["L001"].batch, result.provenance["L001"].attempts) == ("cache", None, 0)
+    assert result.provenance["L002"].source == "llm" and result.batch_sizes == [1]
+
+
+def test_reasks_are_counted_per_lead_and_for_the_run(settings):
+    client = ScriptedClient([reply(item("L001")), reply(item("L002", "none", 2))])
+    result = score(client, settings, [lead("L001"), lead("L002", "Other", "Software")])
+    assert result.validation_retries == 1
+    assert (result.provenance["L001"].attempts, result.provenance["L002"].attempts) == (1, 2)
+
+
+def test_a_fallback_lead_says_so(settings):
+    result = score(ScriptedClient(["nope", "nope", "nope"]), settings, [lead("L001")])
+    provenance = result.provenance["L001"]
+    assert (provenance.source, provenance.attempts) == ("fallback", 3) and result.validation_retries == 2
+    assert [(i.kind, i.lead_id) for i in result.issues if i.kind == "fell_back_to_review"] == [("fell_back_to_review", "L001")]
+    assert [i.kind for i in result.issues].count("unusable_reply") == 3
+
+
+def test_issues_name_what_went_wrong(settings):
+    failed = score(ScriptedClient([LLMError("provider is down")]), settings, [lead("L001")])
+    assert [i.kind for i in failed.issues] == ["llm_call_failed", "fell_back_to_review"]
+    assert "batch 1: provider is down" in failed.issues[0].detail and failed.issues[0].stage == "industry"
+    clamped = score(ScriptedClient([reply(item("L001", "hard", 9))] * 3), settings, [lead("L001")])
+    assert [(i.kind, i.lead_id) for i in clamped.issues] == [("score_clamped", "L001")]
+    assert clamped.provenance["L001"].source == "llm"  # clamped is still the model's answer
+
+
+def test_issue_and_provenance_models_are_validated():
+    from pydantic import ValidationError
+    from pipeline.models import IndustryProvenance, Issue
+
+    with pytest.raises(ValidationError):
+        Issue(stage="report", kind="x", detail="y")
+    with pytest.raises(ValidationError):
+        Issue(stage="ingest", kind="", detail="y")
+    with pytest.raises(ValidationError):
+        IndustryProvenance(source="guess")
+    with pytest.raises(ValidationError):
+        IndustryProvenance(source="llm", batch=0)

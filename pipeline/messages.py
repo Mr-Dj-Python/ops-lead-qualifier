@@ -9,19 +9,21 @@ run; other API failures only cost the affected leads their message.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
 from datetime import date
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from pipeline.config import ConfigError, whole_number
+from pipeline.config import ConfigError, config_error, parse_count, parse_number
 from pipeline.llm_client import LLMAPIClient, LLMAuthError, LLMError, extract_json
 from pipeline.message_checks import MessageRules
 from pipeline.models import (
     GeneratedMessage,
     Lead,
     LeadDecision,
+    Issue,
     MessageItem,
+    MessageProvenance,
+    MessageRun,
     MessagePayload,
     MessageResponse,
 )
@@ -33,81 +35,124 @@ TOKENS_PER_MESSAGE = 250  # reply budget per lead; keeps a large batch from bein
 NO_REPLY = "no message was returned for this lead"
 
 
-@dataclass(frozen=True)
-class MessageSettings:
+MESSAGE_PATHS = {  # settings field -> the config path a user would edit
+    "sender": "messages.sender_name",
+    "call_minutes": "messages.call_minutes",
+    "min_words": "messages.min_words",
+    "max_words": "messages.max_words",
+    "max_subject_words": "messages.max_subject_words",
+    "reengagement_after_days": "messages.reengagement_after_days",
+    "warm_sources": "messages.warm_sources",
+    "batch_size": "llm.messaging.batch_size",
+    "max_tokens": "llm.messaging.max_tokens",
+    "temperature": "llm.messaging.temperature",
+    "validation_retries": "llm.validation_retries",
+}
+
+
+class MessageSettings(BaseModel):
+    """Everything the message stage needs from config.yaml, validated."""
+
+    model_config = ConfigDict(frozen=True)
+
     system_prompt: str
-    sender: str
-    call_minutes: int
-    min_words: int
-    max_words: int
-    max_subject_words: int
-    reengagement_after_days: int
-    warm_sources: frozenset[str]
-    batch_size: int
-    temperature: float
-    max_tokens: int
-    validation_retries: int
+    sender: str  # the line under "Best regards,"
+    call_minutes: int = Field(ge=1)
+    min_words: int = Field(ge=1)
+    max_words: int = Field(ge=1)
+    max_subject_words: int = Field(ge=1)
+    reengagement_after_days: int = Field(ge=1)
+    warm_sources: frozenset[str]  # lower case
+    batch_size: int = Field(ge=1)
+    temperature: float = Field(ge=0)
+    max_tokens: int = Field(ge=1)
+    validation_retries: int = Field(ge=0)
+
+    @field_validator("sender", mode="before")
+    @classmethod
+    def _sender(cls, value) -> str:
+        if not isinstance(value, str) or not value.strip() or "\n" in value.strip():
+            raise ValueError("must be a single line of text (set SENDER_NAME in .env)")
+        return value.strip()
+
+    @field_validator(
+        "call_minutes", "min_words", "max_words", "max_subject_words", "reengagement_after_days", mode="before"
+    )
+    @classmethod
+    def _positive_count(cls, value) -> int:
+        return parse_count(value, 1)
+
+    @field_validator("batch_size", mode="before")
+    @classmethod
+    def _batch_size(cls, value) -> int:
+        return parse_count(value, 1, " (set LLM_BATCH_SIZE in .env)")
+
+    @field_validator("max_tokens", mode="before")
+    @classmethod
+    def _max_tokens(cls, value) -> int:
+        return parse_count(value, 1)
+
+    @field_validator("validation_retries", mode="before")
+    @classmethod
+    def _validation_retries(cls, value) -> int:
+        return parse_count(value, 0)
+
+    @field_validator("temperature", mode="before")
+    @classmethod
+    def _temperature(cls, value) -> float:
+        return parse_number(value, 0)
+
+    @field_validator("warm_sources", mode="before")
+    @classmethod
+    def _warm_sources(cls, value) -> frozenset:
+        if not isinstance(value, (list, tuple, set, frozenset)) or not all(isinstance(v, str) for v in value):
+            raise ValueError("must be a list of text values")
+        return frozenset(source.strip().lower() for source in value)
+
+    @model_validator(mode="after")
+    def _word_range(self) -> "MessageSettings":
+        if self.min_words > self.max_words:
+            raise ValueError("messages.min_words must not exceed max_words")
+        return self
 
     @classmethod
     def from_config(cls, config: dict) -> "MessageSettings":
         messages, llm = config.get("messages"), config.get("llm")
         if not isinstance(messages, dict):
             raise ConfigError("config 'messages' must be a mapping")
-        sender = messages.get("sender_name")
-        if not isinstance(sender, str) or not sender.strip() or "\n" in sender:
-            raise ConfigError("config messages.sender_name must be a single line of text (set SENDER_NAME in .env)")
-        counts = {}
-        for key in ("call_minutes", "min_words", "max_words", "max_subject_words", "reengagement_after_days"):
-            value = whole_number(messages.get(key))
-            if value is None or value < 1:
-                raise ConfigError(f"config messages.{key} must be a whole number of 1 or more")
-            counts[key] = value
-        if counts["min_words"] > counts["max_words"]:
-            raise ConfigError("config messages.min_words must not exceed max_words")
-        warm = messages.get("warm_sources")
-        if not isinstance(warm, list) or not all(isinstance(source, str) for source in warm):
-            raise ConfigError("config messages.warm_sources must be a list of text values")
-
         sending = llm.get("messaging") if isinstance(llm, dict) else None
         if not isinstance(sending, dict):
             raise ConfigError("config llm.messaging must be a mapping")
-        batch_size, max_tokens = whole_number(sending.get("batch_size")), whole_number(sending.get("max_tokens"))
-        temperature = sending.get("temperature")
-        if batch_size is None or batch_size < 1:
-            raise ConfigError(
-                f"config llm.messaging.batch_size must be a whole number of 1 or more, "
-                f"got {sending.get('batch_size')!r} (set LLM_BATCH_SIZE in .env)"
+        try:
+            settings = cls.model_validate(
+                {
+                    "system_prompt": "",  # built below, once everything else is known to be valid
+                    "sender": messages.get("sender_name"),
+                    "call_minutes": messages.get("call_minutes"),
+                    "min_words": messages.get("min_words"),
+                    "max_words": messages.get("max_words"),
+                    "max_subject_words": messages.get("max_subject_words"),
+                    "reengagement_after_days": messages.get("reengagement_after_days"),
+                    "warm_sources": messages.get("warm_sources"),
+                    "batch_size": sending.get("batch_size"),
+                    "temperature": sending.get("temperature"),
+                    "max_tokens": sending.get("max_tokens"),
+                    "validation_retries": llm.get("validation_retries", 2),
+                }
             )
-        if max_tokens is None or max_tokens < 1:
-            raise ConfigError("config llm.messaging.max_tokens must be a whole number of 1 or more")
-        if isinstance(temperature, bool) or not isinstance(temperature, (int, float)) or temperature < 0:
-            raise ConfigError("config llm.messaging.temperature must be a number of 0 or more")
-        retries = whole_number(llm.get("validation_retries", 2))
-        if retries is None or retries < 0:
-            raise ConfigError("config llm.validation_retries must be a whole number of 0 or more")
-
-        merged = {**messages, **counts, "sender_name": sender.strip()}
-        return cls(
-            system_prompt=build_message_system_prompt(config.get("company", {}), merged),
-            sender=sender.strip(),
-            call_minutes=counts["call_minutes"],
-            min_words=counts["min_words"],
-            max_words=counts["max_words"],
-            max_subject_words=counts["max_subject_words"],
-            reengagement_after_days=counts["reengagement_after_days"],
-            warm_sources=frozenset(source.strip().lower() for source in warm),
-            batch_size=batch_size,
-            temperature=float(temperature),
-            max_tokens=max_tokens,
-            validation_retries=retries,
+        except ValidationError as exc:
+            raise config_error(exc, MESSAGE_PATHS) from exc
+        prompt = build_message_system_prompt(
+            config.get("company", {}),
+            {
+                "sender_name": settings.sender,
+                "call_minutes": settings.call_minutes,
+                "min_words": settings.min_words,
+                "max_words": settings.max_words,
+                "max_subject_words": settings.max_subject_words,
+            },
         )
-
-
-@dataclass
-class MessageRun:
-    messages: dict[str, GeneratedMessage]  # keyed by lead_id; only leads that got a valid email
-    api_calls: int = 0
-    failed_ids: list[str] = field(default_factory=list)  # qualified leads left without a message
+        return settings.model_copy(update={"system_prompt": prompt})
 
 
 def choose_variant(lead: Lead, settings: MessageSettings, reference_date: date) -> str:
@@ -138,12 +183,18 @@ class MessageGenerator:
         qualified = [by_id[d.lead_id] for d in decisions if d.decision == "qualified"]
         run = MessageRun(messages={})
         size = self.settings.batch_size
-        for start in range(0, len(qualified), size):
+        total = -(-len(qualified) // size)
+        log.info("messages: %d qualified lead(s), %d batch(es) of up to %d", len(qualified), total, size)
+        for number, start in enumerate(range(0, len(qualified), size), start=1):
             batch = qualified[start : start + size]
-            self._write_batch(batch, reference_date, run)
+            self._write_batch(batch, reference_date, run, number, total)
+        log.info(
+            "messages done: %d written, %d without a valid message, %d API call(s), %d validation re-ask(s)",
+            len(run.messages), len(run.failed_ids), run.api_calls, run.validation_retries,
+        )
         return run
 
-    def _write_batch(self, batch: list[Lead], reference_date: date, run: MessageRun) -> None:
+    def _write_batch(self, batch: list[Lead], reference_date: date, run: MessageRun, number: int, total: int) -> None:
         settings = self.settings
         payloads: dict[str, MessagePayload] = {}
         rules: dict[str, MessageRules] = {}
@@ -160,11 +211,18 @@ class MessageGenerator:
             )
 
         pending = dict(payloads)
+        attempts = {lead_id: 0 for lead_id in payloads}
         problems: dict[str, str] = {}
         repair = False
+        run.batch_sizes.append(len(batch))
+        log.info("message batch %d/%d: %d lead(s)", number, total, len(batch))
         for attempt in range(1 + settings.validation_retries):
             if not pending:
                 break
+            if attempt:
+                run.validation_retries += 1
+            for lead_id in pending:
+                attempts[lead_id] += 1
             prompt = build_message_user_prompt(
                 [p.model_dump() for p in pending.values()], problems=problems or None, repair=repair
             )
@@ -179,12 +237,16 @@ class MessageGenerator:
                 raise
             except LLMError as exc:
                 log.warning("LLM call failed for %d message(s) after retries: %s", len(pending), exc)
+                run.issues.append(Issue(stage="messages", kind="llm_call_failed", detail=f"batch {number}: {exc}"))
                 break
             try:
                 items = MessageResponse.model_validate(extract_json(raw)).messages
                 repair = False
             except (ValueError, ValidationError) as exc:
                 log.warning("LLM reply was not usable (%s); retrying %d message(s)", str(exc).splitlines()[0], len(pending))
+                run.issues.append(
+                    Issue(stage="messages", kind="unusable_reply", detail=f"batch {number}, ask {attempt + 1}: {str(exc).splitlines()[0]}")
+                )
                 repair = True
                 continue
 
@@ -207,6 +269,9 @@ class MessageGenerator:
                     body=valid.body.replace("\r\n", "\n").strip(), word_count=len(valid.body.split()),
                 )
                 del pending[lead_id]
+                run.provenance[lead_id] = MessageProvenance(
+                    status="written", variant=payloads[lead_id].variant, batch=number, attempts=attempts[lead_id]
+                )
             for lead_id in pending:
                 problems.setdefault(lead_id, NO_REPLY)
             if pending:
@@ -215,3 +280,10 @@ class MessageGenerator:
         for lead_id in pending:
             log.warning("no valid message for %s after retries; the lead keeps its qualified decision", lead_id)
             run.failed_ids.append(lead_id)
+            run.provenance[lead_id] = MessageProvenance(
+                status="failed", variant=payloads[lead_id].variant, batch=number, attempts=attempts[lead_id]
+            )
+            run.issues.append(
+                Issue(stage="messages", kind="message_failed", lead_id=lead_id,
+                      detail=problems.get(lead_id, "no usable reply") + " (no valid message after every retry)")
+            )
