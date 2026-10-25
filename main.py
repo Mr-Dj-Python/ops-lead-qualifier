@@ -6,17 +6,21 @@ Usage:
 Scoring weights are read from .env (WEIGHT_INDUSTRY, WEIGHT_SIZE, WEIGHT_SOURCE and
 WEIGHT_RECENCY, referenced from config.yaml); they must add up to 1.
 
-Currently runs Stage 1 (ingestion) and Stage 2 (rule scoring). Exits with status 1 and a
-message on stderr if the file or config cannot be used.
+Runs Stage 1 (ingestion) and Stage 2 (rule scoring). With --score-industry it also runs
+Stage 3 (LLM industry fit), which needs the API key named by llm.api_key_env in .env.
+Exits with status 1 and a message on stderr if the file, config or API key cannot be used.
 """
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from datetime import date
 
 from pipeline.config import ConfigError, load_config, load_env, parse_iso_date
+from pipeline.industry import IndustryScorer, IndustrySettings
 from pipeline.ingest import IngestError, ingest_csv
+from pipeline.llm_client import LLMAuthError, create_llm_client
 from pipeline.rules import RuleFactory, score_leads
 
 
@@ -38,9 +42,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="fail on any dropped row or unparseable value instead of reporting it",
     )
     parser.add_argument(
+        "--score-industry",
+        action="store_true",
+        help="also score industry fit with the LLM (needs the API key in .env)",
+    )
+    parser.add_argument(
         "--show-scores",
         action="store_true",
-        help="print each lead's rule scores (size, source, recency)",
+        help="print each lead's factor scores (size, source, recency, and industry if scored)",
     )
     return parser
 
@@ -69,7 +78,12 @@ def main(argv: list[str] | None = None) -> int:
         )
         scorers = RuleFactory.create_all(config["rules"])
         scores = score_leads(result.leads, scorers, reference_date)
-    except (ConfigError, IngestError) as exc:
+        industry = None
+        if args.score_industry:
+            settings = IndustrySettings.from_config(config)
+            client = create_llm_client(config.get("llm", {}), env)
+            industry = IndustryScorer(client, settings).score(result.leads)
+    except (ConfigError, IngestError, LLMAuthError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
@@ -86,15 +100,30 @@ def main(argv: list[str] | None = None) -> int:
     for error in result.errors:
         print(f"  dropped row {error['row']}: {error['reason']}")
     print(f"Scored {len(scores)} leads with rules: {', '.join(scorer.name for scorer in scorers)}")
+    if industry is not None:
+        print(
+            f"Industry fit: {len(industry.results)} leads scored "
+            f"({industry.api_calls} API calls, {industry.cache_hits} from cache, "
+            f"{len(industry.failed_ids)} fell back to review)"
+        )
+        if industry.failed_ids:
+            print(f"  fallback leads: {', '.join(industry.failed_ids)}")
     if args.show_scores:
         names = [scorer.name for scorer in scorers]
-        print("  " + f"{'lead':<6}{'company':<32}" + "".join(f"{name:>9}" for name in names))
+        extra = f"{'industry':>9}{'  tier':<10}" if industry is not None else ""
+        print("  " + f"{'lead':<6}{'company':<32}" + "".join(f"{name:>9}" for name in names) + extra)
         for lead in result.leads:
             company = (lead.company or lead.name or "")[:30]
             cells = "".join(f"{scores[lead.lead_id][name].score:>9}" for name in names)
+            if industry is not None:
+                fit = industry.results[lead.lead_id]
+                cells += f"{fit.industry_fit:>9}  {fit.tier}" + ("*" if fit.caps_at_review else "")
             print("  " + f"{lead.lead_id:<6}{company:<32}" + cells)
+        if industry is not None:
+            print("  (* = capped at review: unknown tier, low confidence or LLM failure)")
     return 0
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
     sys.exit(main())

@@ -347,8 +347,8 @@ A lead without a valid message stays Qualified; its message is blank and flagged
 ## 7. Configuration keys used by the prompts (`config.yaml`)
 ```yaml
 llm:
-  provider: <groq|openai|gemini>
-  model: <pinned model name>
+  provider: openai          # registered in pipeline/llm_client.py; another provider = another client class
+  model: gpt-4o-mini        # pinned; recorded in run_info and in the cache fingerprint
   api_key_env: LLM_API_KEY
   scoring: {batch_size: 15, temperature: 0, max_tokens: 1500, timeout_s: 30}
   messaging: {batch_size: 8, temperature: 0.7, max_tokens: 1800, timeout_s: 30}

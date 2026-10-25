@@ -11,5 +11,6 @@ pydantic==2.14.1
 # Tests
 pytest==9.1.1
 
-# LLM provider SDK: add one once the provider is chosen, for example
-# groq / openai / google-genai
+# LLM provider SDK (OpenAI today; another provider means another client class in
+# pipeline/llm_client.py plus its SDK here)
+openai==3.37.0
